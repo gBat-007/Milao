@@ -10,13 +10,14 @@ import MapKit
 struct EventsView: View {
     @Binding var event: Event
     var body: some View {
-        NavigationStack {
+        NavigationView {
             TabView {
-                Group {
+                Tab("Members", systemImage: "person.3.fill"){
                     VStack {
                         Text("Members")
                             .bold()
                             .font(.largeTitle)
+                        
                         List($event.members) { $member in
                             HStack {
                                 Image(systemName: "person.fill")
@@ -31,51 +32,33 @@ struct EventsView: View {
                         }
                     }
                 }
-                .tabItem {
-                    Label("Members", systemImage: "person.3.fill")
-                }
-                VStack {
-                    Text("Locations")
-                        .bold()
-                        .font(.largeTitle)
-                        .padding()
-
-                    Map(
-                        coordinateRegion: .constant(MKCoordinateRegion(
-                            center: event.coordinate.clLocation,
-                            span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
-                        )),
-                        annotationItems: [event]
-                    ) { event in
-                        Marker(coordinate: event.coordinate.clLocation, tint: .red)
+                Tab("Locations", systemImage: "mappin.and.ellipse"){
+                    VStack {
+                        Text("Locations")
+                            .bold()
+                            .font(.largeTitle)
+                            .padding()
+                        LocationsView(locations: event.locations)
                     }
-                    .frame(height: 300)
-                    .cornerRadius(10)
+                }
+                Tab("Plans", systemImage: "map"){
+                    VStack {
+                        Text("Plans")
+                            .bold()
+                            .font(.largeTitle)
+                    }
+
+                }
+                
+                Tab("Settings", systemImage: "gear"){
+                    VStack {
+                        Text("Settings")
+                            .bold()
+                            .font(.largeTitle)
+
+                        Text("dog")
+                    }
                     .padding()
-                }
-                .tabItem {
-                    Label("Locations", systemImage: "mappin.and.ellipse")
-                }
-
-                VStack {
-                    Text("Plans")
-                        .bold()
-                        .font(.largeTitle)
-                }
-                .tabItem {
-                    Label("Plans", systemImage: "map")
-                }
-
-                VStack {
-                    Text("Settings")
-                        .bold()
-                        .font(.largeTitle)
-
-                    Text("dog")
-                }
-                .padding()
-                .tabItem {
-                    Label("Settings", systemImage: "gear")
                 }
             }
             .navigationTitle($event.title)
