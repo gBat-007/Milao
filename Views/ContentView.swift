@@ -8,30 +8,38 @@
 import SwiftUI
 
 struct ContentView: View {
+    @State var events = myEvents
     var body: some View {
         NavigationView {
-            TabView {
-                        Tab("Home", systemImage: "house") {
-                            List(myEvents) { event in
-                                EventRow(event: event)
-                                    .padding(.vertical, 4)
-                            }
-                            .listStyle(.insetGrouped)
-                            .navigationTitle("My Events")
-                        }
-                        Tab("Chats", systemImage: "gear") {
-                            ChatsView()
-                        }
-                        Tab("Settings", systemImage: "gear") {
-                            Text("dog")
-                        }
+            
+            List($events) { $event in
+                NavigationLink(destination: EventsView(event: $event)){
+                    EventRow(event: $event)
+                        .padding(.vertical, 4)
+                }
+                
+            }
+            .toolbar{
+                ToolbarItem(placement: .topBarLeading){
+                    Button("Profile", systemImage: "person.circle"){
+                        
                     }
+                }
+                ToolbarItem(placement: .topBarTrailing){
+                    Button("Add Event", systemImage: "plus"){
+                        
+                    }
+                }
+            }
+            .listStyle(.insetGrouped)
+            .navigationTitle("My Events")
+            
         }
     }
 }
 
 struct EventRow: View {
-    let event: Event
+    @Binding var event: Event
     
     var body: some View {
         VStack(spacing: 30) {
@@ -58,9 +66,7 @@ struct EventRow: View {
                 Spacer()
             }
             .padding(10)
-            .background(Color(.systemGray6))
             .cornerRadius(12)
-            .shadow(color: Color.black.opacity(0.05), radius: 1, x: 0, y: 1)
         }
     }
     
