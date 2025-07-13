@@ -22,7 +22,7 @@ struct EventsView: View {
                 Tab("Locations", systemImage: "mappin.and.ellipse", value: 1) {
                     PlacesTab(places: $event.places, presentAddPlaceSheet: $presentAddPlaceSheet)
                 }
-    
+
                 Tab("Plans", systemImage: "map", value: 2) {
                     PlansTab(plans: $event.plans, presentAddPlanSheet: $presentAddPlanSheet)
                 }

@@ -101,7 +101,24 @@ struct ProfileView: View {
         let request = MKLocalSearch.Request(completion: completion)
         let search = MKLocalSearch(request: request)
         search.start { response, _ in
-            completionHandler(response?.mapItems.first?.placemark.coordinate)
+            completionHandler(response?.mapItems.first?.location.coordinate)
         }
     }
 }
+
+//struct ProfileView: View {
+//    @Binding var member: Member
+//
+//    var body: some View {
+//        Form {
+//            Section(header: Text("Name")) {
+//                TextField("Enter name", text: $member.name)
+//            }
+//
+//            Section(header: Text("Location")) {
+//                Text("Place ID: \(member.locationPlaceID)")
+//            }
+//        }
+//        .navigationTitle("Profile")
+//    }
+//}

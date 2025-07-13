@@ -9,12 +9,20 @@ import SwiftUI
 
 struct ContentView: View {
     @State var events = myEvents
-    
+    @State var didntWork = false
     @AppStorage("hasLaunchedBefore") private var hasLaunchedBefore = false
     @AppStorage("memberData") private var memberData: Data?
 
     @State private var showOnboarding = false
     @State private var currentMember: Member?
+
+    func currentMemberBinding() -> Binding<Member>? {
+        guard let currentMember else { return nil }
+        return Binding(
+            get: { currentMember },
+            set: { self.currentMember = $0 }
+        )
+    }
 
     var body: some View {
         NavigationStack {
@@ -22,9 +30,12 @@ struct ContentView: View {
                 .navigationTitle("My Events")
                 .toolbar {
                     ToolbarItem(placement: .topBarLeading) {
-                        Button("Profile", systemImage: "person.circle") {
+                        Button("Profile", systemImage: didntWork ? "person.slash" : "person.circle" ) {
                             if let decoded = Member.decode(from: memberData) {
                                 currentMember = decoded
+                            } else {
+                                didntWork.toggle()
+                                print(memberData)
                             }
                         }
                     }
@@ -34,11 +45,32 @@ struct ContentView: View {
                         }
                     }
                 }
+            
+                .sheet(item: $currentMember) { member in
+                    NavigationStack {
+                        ProfileView(member: Binding(
+                            get: { member },
+                            set: { newValue in currentMember = newValue }
+                        ))
+                        .toolbar {
+                            ToolbarItem(placement: .confirmationAction) {
+                                Button("Done") {
+                                    print("Saved: \(member)")
+                                    currentMember = nil
+                                }
+                            }
+                        }
+                    }
+                }
+
+
         }
         .onAppear {
-            if !hasLaunchedBefore {
+//            if !hasLaunchedBefore {
                 showOnboarding = true
-            }
+//            }
+            
+            
         }
         .sheet(isPresented: $showOnboarding) {
             OnboardingView { member in
@@ -46,12 +78,7 @@ struct ContentView: View {
                 hasLaunchedBefore = true
             }
         }
-        .sheet(item: $currentMember) { memberBinding in
-            ProfileView(member: memberBinding)
-                .onDisappear {
-                    memberData = memberBinding.wrappedValue.encodeToData()
-                }
-        }
+        
     }
 }
 

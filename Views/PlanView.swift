@@ -35,7 +35,7 @@ func regionThatFits(locations: [Location]) -> MKCoordinateRegion {
 
 struct PlansView: View {
     @Binding var locations: [Location]
-    @State private var region = MKCoordinateRegion()
+    @State private var position: MapCameraPosition = .automatic // or use .region if you prefer
     //    @State private var region: MKCoordinateRegion
     
     //    init(locations: [Location]) {
@@ -54,25 +54,29 @@ struct PlansView: View {
     //    }
     
     var body: some View {
-        Map(coordinateRegion: $region, annotationItems: locations) { location in
-            MapAnnotation(coordinate: location.coordinate.clLocation) {
-                VStack {
-                    Image(systemName: "mappin.circle.fill")
-                        .foregroundColor(.red)
-                        .font(.title)
-                    Text(location.name)
-                        .font(.caption)
-                        .padding(4)
-                        .background(Color.white.opacity(0.8))
-                        .cornerRadius(6)
+        Map(initialPosition: position) {
+            ForEach(locations) { location in
+                Annotation(location.name, coordinate: location.coordinate.clLocation) {
+                    VStack {
+                        Image(systemName: "mappin.circle.fill")
+                            .foregroundColor(.red)
+                            .font(.title)
+                        Text(location.name)
+                            .font(.caption)
+                            .padding(4)
+                            .background(Color.white.opacity(0.8))
+                            .cornerRadius(6)
+                    }
                 }
             }
         }
         .onAppear {
-            region = regionThatFits(locations: locations)
+            let newRegion = regionThatFits(locations: locations)
+            position = .region(newRegion)
         }
-        .onChange(of: locations) { newLocations in
-            region = regionThatFits(locations: newLocations)
+        .onChange(of: locations) {
+            let newRegion = regionThatFits(locations: locations)
+            position = .region(newRegion)
         }
         .ignoresSafeArea()
     }

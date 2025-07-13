@@ -84,7 +84,7 @@ struct OnboardingView: View {
         let request = MKLocalSearch.Request(completion: completion)
         let search = MKLocalSearch(request: request)
         search.start { response, error in
-            guard let coordinate = response?.mapItems.first?.placemark.coordinate else {
+            guard let coordinate = response?.mapItems.first?.location.coordinate else {
                 completionHandler(nil)
                 return
             }
