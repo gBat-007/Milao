@@ -1,0 +1,50 @@
+{
+  "fill" : {
+    "linear-gradient" : [
+      "srgb:0.46202,0.83828,1.00000,1.00000",
+      "srgb:0.84466,0.51457,1.00000,1.00000"
+    ]
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "image-name" : "20250711_1543_Flipped Red Icon_remix_01jzwff4w0e5qaftfwepcx4tjz.png",
+          "name" : "20250711_1543_Flipped Red Icon_remix_01jzwff4w0e5qaftfwepcx4tjz",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              68.1751708984375,
+              27.41357421875
+            ]
+          }
+        },
+        {
+          "image-name" : "20250711_1539_Blue Map Marker_remix_01jzwf7vx4e8yt7sj4635h3jqe.png",
+          "name" : "20250711_1539_Blue Map Marker_remix_01jzwf7vx4e8yt7sj4635h3jqe",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              7.8958740234375,
+              24.475341796875
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}

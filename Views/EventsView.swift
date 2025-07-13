@@ -34,11 +34,11 @@ struct EventsView: View {
                 }
                 Tab("Locations", systemImage: "mappin.and.ellipse"){
                     VStack {
-                        Text("Locations")
+                        Text("Places")
                             .bold()
                             .font(.largeTitle)
                             .padding()
-                        LocationsView(locations: event.locations)
+                        PlacesView(places: $event.places)
                     }
                 }
                 Tab("Plans", systemImage: "map"){
@@ -46,6 +46,7 @@ struct EventsView: View {
                         Text("Plans")
                             .bold()
                             .font(.largeTitle)
+                        PlansView(locations: $event.locations)
                     }
 
                 }
