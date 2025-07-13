@@ -9,34 +9,51 @@ import SwiftUI
 
 struct ContentView: View {
     @State var events = myEvents
+    
     var body: some View {
-        NavigationView {
-            
-            List($events) { $event in
-                NavigationLink(destination: EventsView(event: $event)){
-                    EventRow(event: $event)
-                        .padding(.vertical, 4)
-                }
-                
-            }
-            .toolbar{
-                ToolbarItem(placement: .topBarLeading){
-                    Button("Profile", systemImage: "person.circle"){
-                        
+        NavigationStack {
+            EventsList(events: $events)
+                .navigationTitle("My Events")
+                .toolbar {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button("Profile", systemImage: "person.circle") {
+                            // Profile action
+                        }
+                    }
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("Add Event", systemImage: "plus") {
+                            // Add event action
+                        }
                     }
                 }
-                ToolbarItem(placement: .topBarTrailing){
-                    Button("Add Event", systemImage: "plus"){
-                        
-                    }
-                }
-            }
-            .listStyle(.insetGrouped)
-            .navigationTitle("My Events")
-            
         }
     }
 }
+
+struct EventsList: View {
+    @Binding var events: [Event]
+    
+    var body: some View {
+        List {
+            ForEach($events) { $event in
+                NavigationLink(destination: EventsView(event: $event)) {
+                    EventRow(event: $event)
+                        .padding()
+                        .background(
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .fill(Color(.systemBackground))
+                                .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+                        )
+                        .padding(.vertical, 6)
+                }
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+            }
+        }
+        .listStyle(.plain)
+    }
+}
+
 
 struct EventRow: View {
     @Binding var event: Event

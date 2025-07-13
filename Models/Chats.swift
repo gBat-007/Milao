@@ -6,9 +6,10 @@
 //
 
 import Foundation
+import FirebaseFirestore
 
 struct Chat: Identifiable, Codable {
-    let id: UUID = UUID()
+    @DocumentID var id: String? = UUID().uuidString
     var title: String
     var emoji: String
     var membersNum: Int

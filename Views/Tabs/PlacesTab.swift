@@ -69,37 +69,25 @@ struct AddPlaceView: View {
 }
 
 
+import SwiftUI
 
-struct PlacesView: View {
+struct PlacesTab: View {
     @Binding var places: [Place]
-    @State var presentAddPlaceSheet: Bool = false
+    @Binding var presentAddPlaceSheet: Bool
+
     var body: some View {
-        NavigationView {
+        VStack {
             List($places) { $place in
-//                NavigationLink(destination: ?){
-                    PlaceRow(place: $place)
-                        .padding(.vertical, 4)
-//                }
-            }
-            .sheet(isPresented: $presentAddPlaceSheet){
-                AddPlaceView { newPlace in
-                    places.append(newPlace)
-                }
-                .presentationDetents([.medium])
-            }
-            .toolbar{
-//                ToolbarItem(placement: .topBarLeading){
-//                    Button("Profile", systemImage: "person.circle"){
-//
-//                    }
-//                }
-                ToolbarItem(placement: .topBarTrailing){
-                    Button("Add Place", systemImage: "plus"){
-                        presentAddPlaceSheet = true
-                    }
-                }
+                PlaceRow(place: $place)
+                    .padding(.vertical, 4)
             }
             .listStyle(.insetGrouped)
+        }
+        .sheet(isPresented: $presentAddPlaceSheet) {
+            AddPlaceView { newPlace in
+                places.append(newPlace)
+            }
+            .presentationDetents([.medium])
         }
     }
 }
@@ -119,7 +107,8 @@ struct PlaceRow: View {
                     Text(place.name)
                         .font(.headline)
                         .foregroundColor(.primary)
-                    
+                    Text(place.descriptionAI)
+                        .font(.subheadline)
 //                    HStack(spacing: 12) {
 //                        Label("\(event.membersNum)", systemImage: "person.3.fill")
 //                            .foregroundColor(.secondary)
