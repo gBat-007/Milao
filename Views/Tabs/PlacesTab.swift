@@ -32,7 +32,7 @@ struct AddPlaceView: View {
     var onComplete: (Place) -> Void
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 20) {
                 TextField("Type of place (e.g. Restaurant)", text: $name)
                     .textFieldStyle(.roundedBorder)

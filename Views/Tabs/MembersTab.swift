@@ -92,9 +92,9 @@ struct AddMemberView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Add") {
-                        let newMember = Member(name: name, email: email)
-                        onAdd(newMember)
-                        dismiss()
+//                        let newMember = Member(name: name, email: email)
+//                        onAdd(newMember)
+//                        dismiss()
                     }
                     .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || email.trimmingCharacters(in: .whitespaces).isEmpty)
                 }

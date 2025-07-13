@@ -32,11 +32,30 @@ struct Coordinate: Hashable, Codable, Equatable {
     }
 }
 
-struct Member: Identifiable, Codable {
+struct Member: Identifiable, Codable, Equatable {
     @DocumentID var id: String? = UUID().uuidString
     var name: String
-    var email: String
+    var locationPlaceID: String
 }
+
+
+extension Member {
+    func encodeToData() -> Data? {
+        try? JSONEncoder().encode(self)
+    }
+
+    static func decode(from data: Data?) -> Member? {
+        guard let data else { return nil }
+        return try? JSONDecoder().decode(Member.self, from: data)
+    }
+
+    var coordinate: CLLocationCoordinate2D? {
+        let parts = locationPlaceID.split(separator: ",").compactMap { Double($0.trimmingCharacters(in: .whitespaces)) }
+        guard parts.count == 2 else { return nil }
+        return CLLocationCoordinate2D(latitude: parts[0], longitude: parts[1])
+    }
+}
+
 
 struct Location: Identifiable, Codable, Equatable{
     @DocumentID var id: String? = UUID().uuidString
@@ -60,19 +79,19 @@ struct Place: Identifiable, Equatable, Codable{
 
 let myEvents: [Event] = [
     Event(title: "Birthday Bash", emoji: "🥳", membersNum: 15, locationsNum: 3,
-          members: [Member(name: "Gaurav", email: "gayestalive@gmail.in")],
+          members: [],
           chats: [Chat(title: "Birthday Bash", emoji: "🥳", membersNum: 15)],
           places: [],
           plans: [Plan(name: "Plan 1", locations: [Location(name: "Point Nemo", coordinate: Coordinate(latitude: -48.8767, longitude: -123.3933)),Location(name: "Apple Park", coordinate: Coordinate(latitude: 37.3346, longitude: -122.0090))])]
          ),
     Event(title: "Alumni Hangout", emoji: "🎓", membersNum: 23, locationsNum: 1,
-          members: [Member(name: "Gautam", email: "gayeralive@gmail.in"),Member(name: "Mahith", email: "lgbtqalive@gmail.in"),Member(name: "Saurish", email: "lesbianalive@gmail.in")],
+          members: [],
           chats: [Chat(title: "Alumni Hangout", emoji: "🎓", membersNum: 23)],
           places: [],
           plans: [Plan(name: "Plan 1", locations: [Location(name: "Point Nemo", coordinate: Coordinate(latitude: -48.8767, longitude: -123.3933)),Location(name: "Apple Park", coordinate: Coordinate(latitude: 37.3346, longitude: -122.0090))])]
          ),
     Event(title: "Study Group", emoji: "📕", membersNum: 21, locationsNum: 4,
-          members: [Member(name: "Gautam", email: "gayalive@gmail.in")],
+          members: [],
           chats: [Chat(title: "Study Group", emoji: "📕", membersNum: 21)],
           places: [],
           plans: []

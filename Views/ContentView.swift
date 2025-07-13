@@ -10,6 +10,12 @@ import SwiftUI
 struct ContentView: View {
     @State var events = myEvents
     
+    @AppStorage("hasLaunchedBefore") private var hasLaunchedBefore = false
+    @AppStorage("memberData") private var memberData: Data?
+
+    @State private var showOnboarding = false
+    @State private var currentMember: Member?
+
     var body: some View {
         NavigationStack {
             EventsList(events: $events)
@@ -17,18 +23,40 @@ struct ContentView: View {
                 .toolbar {
                     ToolbarItem(placement: .topBarLeading) {
                         Button("Profile", systemImage: "person.circle") {
-                            // Profile action
+                            if let decoded = Member.decode(from: memberData) {
+                                currentMember = decoded
+                            }
                         }
                     }
                     ToolbarItem(placement: .topBarTrailing) {
                         Button("Add Event", systemImage: "plus") {
-                            // Add event action
+                            // Add event logic
                         }
                     }
                 }
         }
+        .onAppear {
+            if !hasLaunchedBefore {
+                showOnboarding = true
+            }
+        }
+        .sheet(isPresented: $showOnboarding) {
+            OnboardingView { member in
+                memberData = member.encodeToData()
+                hasLaunchedBefore = true
+            }
+        }
+        .sheet(item: $currentMember) { memberBinding in
+            ProfileView(member: memberBinding)
+                .onDisappear {
+                    memberData = memberBinding.wrappedValue.encodeToData()
+                }
+        }
     }
 }
+
+
+
 
 struct EventsList: View {
     @Binding var events: [Event]
