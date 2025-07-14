@@ -9,7 +9,8 @@ import SwiftUI
 
 struct ContentView: View {
     @State var events = myEvents
-    @State var didntWork = false
+    @State var profileDoesNotWork = false
+    @State var showAddMenu = false
     @AppStorage("hasLaunchedBefore") private var hasLaunchedBefore = false
     @AppStorage("memberData") private var memberData: Data?
 
@@ -30,39 +31,41 @@ struct ContentView: View {
                 .navigationTitle("My Events")
                 .toolbar {
                     ToolbarItem(placement: .topBarLeading) {
-                        Button("Profile", systemImage: didntWork ? "person.slash" : "person.circle" ) {
+                        Button("Profile", systemImage: profileDoesNotWork ? "person.slash" : "person.circle" ) {
                             if let decoded = Member.decode(from: memberData) {
                                 currentMember = decoded
                             } else {
-                                didntWork.toggle()
-                                print(memberData)
+                                profileDoesNotWork.toggle()
                             }
                         }
                     }
                     ToolbarItem(placement: .topBarTrailing) {
                         Button("Add Event", systemImage: "plus") {
-                            // Add event logic
+                            showAddMenu = true
+                        }
+                        .sheet(isPresented: $showAddMenu) {
+                            AddEventMenuView()
                         }
                     }
                 }
-            
                 .sheet(item: $currentMember) { member in
                     NavigationStack {
                         ProfileView(member: Binding(
-                            get: { member },
-                            set: { newValue in currentMember = newValue }
-                        ))
-                        .toolbar {
-                            ToolbarItem(placement: .confirmationAction) {
-                                Button("Done") {
-                                    print("Saved: \(member)")
-                                    currentMember = nil
-                                }
+                            get: { currentMember ?? member },
+                            set: { updated in
+                                currentMember = updated
+                                memberData = updated.encodeToData()  // ✅ Persist changes
                             }
-                        }
+                        ))
+//                        .toolbar {
+//                            ToolbarItem(placement: .confirmationAction) {
+//                                Button("Done") {
+//                                    currentMember = nil
+//                                }
+//                            }
+//                        }
                     }
                 }
-
 
         }
         .onAppear {
@@ -130,7 +133,7 @@ struct EventRow: View {
                             .foregroundColor(.secondary)
                             .font(.subheadline)
                         
-                        Label("\(event.locationsNum)", systemImage: "mappin.and.ellipse")
+                        Label("\(event.placesNum)", systemImage: "mappin.and.ellipse")
                             .foregroundColor(.secondary)
                             .font(.subheadline)
                     }

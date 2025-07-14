@@ -34,7 +34,6 @@ struct EventsView: View {
                 Tab("Settings", systemImage: "gear", value: 4) {
                     SettingsTab()
                 }
-                
             }
             .navigationTitle($event.title)
             .navigationBarTitleDisplayMode(.inline)

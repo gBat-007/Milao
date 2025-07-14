@@ -20,9 +20,18 @@ extension Member {
     }
 
     var coordinate: CLLocationCoordinate2D? {
-        let parts = locationPlaceID.split(separator: ",").compactMap { Double($0.trimmingCharacters(in: .whitespaces)) }
-        guard parts.count == 2 else { return nil }
-        return CLLocationCoordinate2D(latitude: parts[0], longitude: parts[1])
+        get {
+            let parts = locationPlaceID.split(separator: ",").compactMap { Double($0.trimmingCharacters(in: .whitespaces)) }
+            guard parts.count == 2 else { return nil }
+            return CLLocationCoordinate2D(latitude: parts[0], longitude: parts[1])
+        }
+        set {
+            if let newValue = newValue {
+                locationPlaceID = "\(newValue.latitude),\(newValue.longitude)"
+            } else {
+                locationPlaceID = ""
+            }
+        }
     }
 }
 
