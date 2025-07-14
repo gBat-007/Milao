@@ -16,7 +16,7 @@ struct EventsView: View {
             TabView(selection: $selectedTab) {
                 
                 Tab("Members", systemImage: "person.3.fill", value: 0) {
-                    MembersTab(members: $event.members, presentAddMemberSheet: $presentAddMemberSheet)
+                    MembersTab(members: $event.members, presentAddMemberSheet: $presentAddMemberSheet, inviteCode: event.inviteCode)
                 }
 
                 Tab("Locations", systemImage: "mappin.and.ellipse", value: 1) {

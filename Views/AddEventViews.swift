@@ -1,6 +1,31 @@
 import Foundation
 import SwiftUI
 
+class LocalEventStore {
+    private let key = "local_events"
+
+    func save(event: Event) {
+        var events = fetchEvents()
+        events.append(event)
+        if let data = try? JSONEncoder().encode(events) {
+            UserDefaults.standard.set(data, forKey: key)
+        }
+    }
+
+    func fetchEvents() -> [Event] {
+        guard let data = UserDefaults.standard.data(forKey: key),
+              let events = try? JSONDecoder().decode([Event].self, from: data) else {
+            return []
+        }
+        return events
+    }
+
+    func clear() {
+        UserDefaults.standard.removeObject(forKey: key)
+    }
+}
+
+
 struct AddEventMenuView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var createMode = false
@@ -38,9 +63,9 @@ struct CreateEventView: View {
     @State private var errorMessage: String?
     
     private let repo = EventRepository()
-
+    
     var onSuccess: (Event) -> Void
-
+    
     var body: some View {
         NavigationStack {
             Form {
@@ -58,7 +83,7 @@ struct CreateEventView: View {
                         .font(.system(.body, design: .monospaced))
                         .bold()
                 }
-
+                
                 if let error = errorMessage {
                     Text(error).foregroundColor(.red)
                 }
@@ -77,11 +102,10 @@ struct CreateEventView: View {
             }
         }
     }
-
     private func saveEvent() {
         isSaving = true
         let event = Event(
-            id: "",
+            id: UUID().uuidString,
             title: title,
             emoji: emoji,
             members: [],
@@ -92,7 +116,11 @@ struct CreateEventView: View {
             bgColor2: CodableColor(color: secondaryColor),
             inviteCode: inviteCode
         )
-
+        
+        // Save locally no matter what
+        LocalEventStore().save(event: event)
+        
+        // Then try cloud, if it fails, show a message
         repo.createEvent(event) { result in
             isSaving = false
             switch result {
@@ -100,7 +128,9 @@ struct CreateEventView: View {
                 onSuccess(event)
                 dismiss()
             case .failure(let error):
-                errorMessage = error.localizedDescription
+                errorMessage = "Saved locally. Could not upload: \(error.localizedDescription)"
+                onSuccess(event) // Still proceed as if it's saved
+                dismiss()
             }
         }
     }
@@ -131,7 +161,7 @@ struct JoinEventView: View {
             }
         }
     }
-
+    
     private func joinEvent() {
         isJoining = true
         repo.joinEvent(inviteCode: code) { result in

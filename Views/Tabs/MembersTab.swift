@@ -12,7 +12,7 @@ import SwiftUI
 struct MembersTab: View {
     @Binding var members: [Member]
     @Binding var presentAddMemberSheet: Bool
-
+    let inviteCode: String
     var body: some View {
         VStack {
             List($members) { $member in
@@ -22,10 +22,8 @@ struct MembersTab: View {
             .listStyle(.insetGrouped)
         }
         .sheet(isPresented: $presentAddMemberSheet) {
-            AddMemberView { newMember in
-                members.append(newMember)
-            }
-            .presentationDetents([.medium])
+            AddMemberView(inviteCode: inviteCode)
+                .presentationDetents([.fraction(0.2)])
         }
     }
 }
@@ -69,34 +67,28 @@ struct MemberRow: View {
 struct AddMemberView: View {
     @Environment(\.dismiss) var dismiss
 
-    @State private var name = ""
-    @State private var email = ""
-
-    var onAdd: (Member) -> Void
-
+    let inviteCode: String
+    
     var body: some View {
         NavigationView {
             Form {
-                Section(header: Text("Member Details")) {
-                    TextField("Name", text: $name)
-                    TextField("Email", text: $email)
-                        .keyboardType(.emailAddress)
+                HStack {
+                    Text("Invite Code:")
+                        .bold()
+                        .fontDesign(.rounded)
+                    Spacer()
+                    Text(inviteCode)
+                        .font(.system(.body, design: .monospaced))
+                        .bold()
                 }
             }
-            .navigationTitle("New Member")
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Add") {
+                    Button("Done") {
 //                        let newMember = Member(name: name, email: email)
 //                        onAdd(newMember)
 //                        dismiss()
                     }
-                    .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || email.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
             }
         }

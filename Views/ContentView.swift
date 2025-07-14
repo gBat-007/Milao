@@ -4,13 +4,12 @@
 //
 //  Created by Gautam Bansal on 09/07/25.
 //
-
 import SwiftUI
 
 struct ContentView: View {
-    @State var events = myEvents
-    @State var profileDoesNotWork = false
-    @State var showAddMenu = false
+    @State private var events: [Event] = []
+    @State private var profileDoesNotWork = false
+    @State private var showAddMenu = false
     @AppStorage("hasLaunchedBefore") private var hasLaunchedBefore = false
     @AppStorage("memberData") private var memberData: Data?
 
@@ -44,7 +43,10 @@ struct ContentView: View {
                             showAddMenu = true
                         }
                         .sheet(isPresented: $showAddMenu) {
-                            AddEventMenuView()
+                            CreateEventView { newEvent in
+                                events.append(newEvent)
+                                LocalEventStore().save(event: newEvent)
+                            }
                         }
                     }
                 }
@@ -54,26 +56,15 @@ struct ContentView: View {
                             get: { currentMember ?? member },
                             set: { updated in
                                 currentMember = updated
-                                memberData = updated.encodeToData()  // ✅ Persist changes
+                                memberData = updated.encodeToData()
                             }
                         ))
-//                        .toolbar {
-//                            ToolbarItem(placement: .confirmationAction) {
-//                                Button("Done") {
-//                                    currentMember = nil
-//                                }
-//                            }
-//                        }
                     }
                 }
-
         }
         .onAppear {
-//            if !hasLaunchedBefore {
-                showOnboarding = true
-//            }
-            
-            
+            events = LocalEventStore().fetchEvents()
+            showOnboarding = !hasLaunchedBefore
         }
         .sheet(isPresented: $showOnboarding) {
             OnboardingView { member in
@@ -81,7 +72,6 @@ struct ContentView: View {
                 hasLaunchedBefore = true
             }
         }
-        
     }
 }
 
