@@ -3,31 +3,13 @@ import SwiftUI
 import Foundation
 import FoundationModels
 
-@Generable
-struct EmojiGenerator {
-    @Guide(description: "An emoji that represents the type of place.")
-    var emoji: String
-}
-
-@Observable
-class PlaceGenerator {
-    let session = LanguageModelSession()
-
-    func generateEmoji(for placeType: String) async throws -> String {
-        let result = try await session.respond(
-            to: "Give me only one emoji that represents a \(placeType). Do not include any explanation.",
-            generating: EmojiGenerator.self
-        )
-        return result.content.emoji
-    }
-}
-
 struct AddPlaceView: View {
     @State private var name: String = ""
     @State private var isLoading = false
     @Environment(\.dismiss) var dismiss
     @State private var errorMessage: String?
-    
+    @AppStorage("memberData") private var memberData: Data?
+
     let placeGenerator = PlaceGenerator()
     var onComplete: (Place) -> Void
 
@@ -67,9 +49,6 @@ struct AddPlaceView: View {
         }
     }
 }
-
-
-import SwiftUI
 
 struct PlacesTab: View {
     @Binding var places: [Place]
