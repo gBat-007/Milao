@@ -5,6 +5,7 @@
 //  Created by Gautam Bansal on 09/07/25.
 //
 import SwiftUI
+import ActivityKit
 
 struct ContentView: View {
     @State private var events: [Event] = []
@@ -15,7 +16,7 @@ struct ContentView: View {
 
     @State private var showOnboarding = false
     @State private var currentMember: Member?
-
+    
     func currentMemberBinding() -> Binding<Member>? {
         guard let currentMember else { return nil }
         return Binding(
@@ -25,6 +26,15 @@ struct ContentView: View {
     }
 
     var body: some View {
+        VStack {
+            Button("Start Dynamic Island Activity") {
+                TimerManager.shared.startTimer(duration: 10)
+            }
+            Button("Stop Activity") {
+                TimerManager.shared.stopTimer()
+            }
+        }
+        
         NavigationStack {
             EventsList(events: $events)
                 .navigationTitle("My Events")
@@ -74,8 +84,6 @@ struct ContentView: View {
         }
     }
 }
-
-
 
 
 struct EventsList: View {
