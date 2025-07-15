@@ -51,15 +51,15 @@ struct ProfileView: View {
                                                 .foregroundColor(.gray)
                                         }
                                     }
+                                    .padding(.vertical)
                                 }
                             }
                         }
-                        .frame(height: 150)
                     }
 
                     if let coord = coordinate {
                         Map {
-                            Marker("Location", coordinate: coord)
+                            Marker("Your Location", coordinate: coord)
                         }
                         .frame(height: 200)
                         .cornerRadius(10)

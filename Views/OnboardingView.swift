@@ -52,10 +52,10 @@ struct OnboardingView: View {
                                                 .foregroundColor(.gray)
                                         }
                                     }
+                                    .padding(.vertical)
                                 }
                             }
                         }
-                        .frame(height: 150)
                     }
                 }
             }

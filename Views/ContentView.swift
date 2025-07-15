@@ -88,10 +88,15 @@ struct EventsList: View {
                     EventRow(event: $event)
                         .padding()
                         .background(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(Color(.systemBackground))
-                                .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+                            RoundedRectangle(cornerRadius: 25, style: .continuous)
+                                .fill(Gradient(colors: [event.bgColor1.color, event.bgColor2.color]))
                         )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 25)
+                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                        )
+                        .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 5)
+                        .blur(radius: 0.3) // small blur for softness
                         .padding(.vertical, 6)
                 }
                 .listRowSeparator(.hidden)
@@ -105,7 +110,8 @@ struct EventsList: View {
 
 struct EventRow: View {
     @Binding var event: Event
-    
+    @State var textColor: Color = .black
+    @State var subTextColor: Color = .gray
     var body: some View {
         VStack(spacing: 30) {
             HStack(alignment: .top, spacing: 16) {
@@ -116,15 +122,15 @@ struct EventRow: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(event.title)
                         .font(.headline)
-                        .foregroundColor(.primary)
+                        .foregroundColor(textColor)
                     
                     HStack(spacing: 12) {
                         Label("\(event.membersNum)", systemImage: "person.3.fill")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(subTextColor)
                             .font(.subheadline)
                         
                         Label("\(event.placesNum)", systemImage: "mappin.and.ellipse")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(subTextColor)
                             .font(.subheadline)
                     }
                 }
@@ -133,9 +139,29 @@ struct EventRow: View {
             .padding(10)
             .cornerRadius(12)
         }
+        .onAppear {
+            let isDarkBG = event.bgColor1.color.isDark && event.bgColor2.color.isDark
+            textColor = isDarkBG ? .white : .black
+            subTextColor = isDarkBG ? .white.opacity(0.8) : .black.opacity(0.6)
+        }
     }
     
     #Preview {
         ContentView()
+    }
+}
+
+extension Color {
+    var isDark: Bool {
+        let uiColor = UIColor(self)
+        var r: CGFloat = 0
+        var g: CGFloat = 0
+        var b: CGFloat = 0
+        var a: CGFloat = 0
+        uiColor.getRed(&r, green: &g, blue: &b, alpha: &a)
+
+        // Perceived brightness algorithm
+        let brightness = (r * 299 + g * 587 + b * 114) / 1000
+        return brightness < 0.5
     }
 }
