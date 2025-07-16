@@ -18,6 +18,7 @@ struct Event: Identifiable, Codable {
     var chats: [Chat]
     var places: [Place]
     var plans: [Plan]
+    var eventDate: Date
     var membersNum: Int {
         return members.count
     }
@@ -27,27 +28,40 @@ struct Event: Identifiable, Codable {
     var bgColor1: CodableColor = CodableColor(color: .white)
     var bgColor2: CodableColor = CodableColor(color: .white)
     var inviteCode: String
-    
+
     static func generateInviteCode() -> String {
-            let chars = Array("abcdefghijklmnopqrstuvwxyz")
-            return String((0..<6).map { _ in chars.randomElement()! })
-        }
-    
-    /// Creates a new `Event` with empty initial arrays.
-    init(title: String, emoji: String?, primaryColor: Color, secondaryColor: Color) {
-            self.title = title
-            self.emoji = emoji ?? "x" //will later do AI stuff with this
-            self.bgColor1 = CodableColor(color: primaryColor)
-            self.bgColor2 = CodableColor(color: secondaryColor)
-            self.inviteCode = Event.generateInviteCode()
-            self.members = []
-            self.places = []
-            self.plans = []
-            self.chats = []
+        let chars = Array("abcdefghijklmnopqrstuvwxyz")
+        return String((0..<6).map { _ in chars.randomElement()! })
     }
-    
+
+    /// Creates a new `Event` with empty initial arrays.
+    init(title: String, emoji: String?, primaryColor: Color, secondaryColor: Color, eventDate: Date) {
+        self.title = title
+        self.emoji = emoji ?? "x" // will later do AI stuff with this
+        self.bgColor1 = CodableColor(color: primaryColor)
+        self.bgColor2 = CodableColor(color: secondaryColor)
+        self.inviteCode = Event.generateInviteCode()
+        self.members = []
+        self.places = []
+        self.plans = []
+        self.chats = []
+        self.eventDate = eventDate
+    }
+
     /// Creates an `Event` with all provided values, to be used in decoding & sharing events.
-    init(id: String?, title: String, emoji: String, members: [Member], chats: [Chat], places: [Place], plans: [Plan], bgColor1: CodableColor, bgColor2: CodableColor, inviteCode: String) {
+    init(
+        id: String?,
+        title: String,
+        emoji: String,
+        members: [Member],
+        chats: [Chat],
+        places: [Place],
+        plans: [Plan],
+        eventDate: Date,
+        bgColor1: CodableColor,
+        bgColor2: CodableColor,
+        inviteCode: String
+    ) {
         self.id = id
         self.title = title
         self.emoji = emoji
@@ -55,6 +69,7 @@ struct Event: Identifiable, Codable {
         self.chats = chats
         self.places = places
         self.plans = plans
+        self.eventDate = eventDate
         self.bgColor1 = bgColor1
         self.bgColor2 = bgColor2
         self.inviteCode = inviteCode

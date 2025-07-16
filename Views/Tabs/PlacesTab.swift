@@ -2,24 +2,51 @@
 import SwiftUI
 
 
+
+
 struct PlacesTab: View {
     @Binding var places: [Place]
     @Binding var presentAddPlaceSheet: Bool
-
+    @State private var newPlace: Place?
+    @Binding var bgColor1: CodableColor
+    @Binding var bgColor2: CodableColor
     var body: some View {
         VStack {
-            List($places) { $place in
-                PlaceRow(place: $place)
-                    .padding(.vertical, 4)
+            List {
+                Section {
+                    ForEach($places, id: \.id) { $place in
+                        HStack {
+                            Image(systemName: "line.3.horizontal")
+                                .foregroundColor(.gray)
+                            PlaceRow(place: $place)
+                        }
+                    }
+                    .onMove(perform: movePlace)
+                    .moveDisabled(false) // ← allows drag without EditMode
+                }
             }
             .listStyle(.insetGrouped)
         }
-        .sheet(isPresented: $presentAddPlaceSheet) {
-            AddPlaceView { newPlace in
-                places.append(newPlace)
+        .sheet(isPresented: $presentAddPlaceSheet, onDismiss: {
+            if let place = newPlace {
+                places.append(
+                    Place(
+                        id: UUID().uuidString,
+                        name: place.name,
+                        descriptionAI: place.descriptionAI,
+                        emoji: place.emoji
+                    )
+                )
+                newPlace = nil
             }
-            .presentationDetents([.medium])
+        }) {
+            AddPlaceView(draftPlace: $newPlace, color1: $bgColor1, color2: $bgColor2)
+                .presentationDetents([.fraction(0.7)])
         }
+    }
+    
+    func movePlace(from source: IndexSet, to destination: Int) {
+        places.move(fromOffsets: source, toOffset: destination)
     }
 }
 

@@ -23,7 +23,7 @@ struct MembersTab: View {
         }
         .sheet(isPresented: $presentAddMemberSheet) {
             AddMemberView(inviteCode: inviteCode)
-                .presentationDetents([.fraction(0.2)])
+                .presentationDetents([.fraction(0.35)])
         }
     }
 }
@@ -77,9 +77,7 @@ struct AddMemberView: View {
                         .bold()
                         .fontDesign(.rounded)
                     Spacer()
-                    Text(inviteCode)
-                        .font(.system(.body, design: .monospaced))
-                        .bold()
+                    InviteCodeView(inviteCode: inviteCode)
                 }
             }
             .toolbar {
@@ -87,7 +85,7 @@ struct AddMemberView: View {
                     Button("Done") {
 //                        let newMember = Member(name: name, email: email)
 //                        onAdd(newMember)
-//                        dismiss()
+                        dismiss()
                     }
                 }
             }

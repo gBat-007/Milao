@@ -20,10 +20,10 @@ struct EventsView: View {
                 }
 
                 Tab("Locations", systemImage: "mappin.and.ellipse", value: 1) {
-                    PlacesTab(places: $event.places, presentAddPlaceSheet: $presentAddPlaceSheet)
+                    PlacesTab(places: $event.places, presentAddPlaceSheet: $presentAddPlaceSheet, bgColor1: $event.bgColor1, bgColor2: $event.bgColor2)
                 }
 
-                Tab("Plans", systemImage: "map", value: 2) {
+                Tab("Plan", systemImage: "map", value: 2) {
                     PlansTab(plans: $event.plans, presentAddPlanSheet: $presentAddPlanSheet)
                 }
 
@@ -32,7 +32,7 @@ struct EventsView: View {
                 }
 
                 Tab("Settings", systemImage: "gear", value: 4) {
-                    SettingsTab()
+                    SettingsTab(primaryColor: $event.bgColor1, secondaryColor: $event.bgColor2, eventEmoji: $event.emoji, eventDate: $event.eventDate)
                 }
             }
             .navigationTitle($event.title)

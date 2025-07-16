@@ -58,11 +58,16 @@ struct CreateEventView: View {
     @State private var primaryColor = Color.accentColor
     @State private var secondaryColor = Color.gray
     @State private var emoji = ""
+    @State private var selectedDateTime: Date = Date()
     @State private var inviteCode = Event.generateInviteCode()
     @State private var isSaving = false
     @State private var errorMessage: String?
-    
     private let repo = EventRepository()
+    private var dateRange: ClosedRange<Date> {
+        let now = Date()
+        let oneYearFromNow = Calendar.current.date(byAdding: .year, value: 1, to: now)!
+        return now...oneYearFromNow
+    }
     
     var onSuccess: (Event) -> Void
     
@@ -74,14 +79,22 @@ struct CreateEventView: View {
                 ColorPicker("Primary Color", selection: $primaryColor)
                 ColorPicker("Secondary Color", selection: $secondaryColor)
                 
-                TextField("Emoji (optional)", text: $emoji)
+                HStack{
+                    Text("Emoji ")
+                        .fontDesign(.rounded)
+                    EmojiTextField(text: $emoji)
+                        .frame(width: 60, height: 40)
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.gray.opacity(0.4)))
+                }
+                
+                DatePicker("Event Date & Start Time", selection: $selectedDateTime, in: dateRange, displayedComponents: [.date, .hourAndMinute])
+                .datePickerStyle(.compact) // or .compact / .wheel
+                .padding()
                 
                 HStack {
                     Text("Invite Code:")
                     Spacer()
-                    Text(inviteCode)
-                        .font(.system(.body, design: .monospaced))
-                        .bold()
+                    InviteCodeView(inviteCode: inviteCode)
                 }
                 
                 if let error = errorMessage {
@@ -112,6 +125,7 @@ struct CreateEventView: View {
             chats: [],
             places: [],
             plans: [],
+            eventDate: selectedDateTime,
             bgColor1: CodableColor(color: primaryColor),
             bgColor2: CodableColor(color: secondaryColor),
             inviteCode: inviteCode

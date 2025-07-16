@@ -1,73 +1,123 @@
-import Foundation
-import FoundationModels
 import SwiftUI
+import FoundationModels
+import Foundation
+
 
 struct AddPlaceView: View {
     @State private var placeType: String = ""
     @State private var locationName: String = ""
-    @State private var currentQuestion: PlaceQuestion?
+    @State private var currentQuestion: PlaceQuestion.PartiallyGenerated?
     @State private var answers: [String: String] = [:]
     @State private var emoji: String = ""
     @State private var isThinking = false
     @State private var step = 0
     @State private var errorMessage: String?
     
+    @Binding var draftPlace: Place?
+    @Binding var color1: CodableColor
+    @Binding var color2: CodableColor
     @AppStorage("memberData") private var memberData: Data?
     @Environment(\.dismiss) private var dismiss
-
-    var onComplete: (Place) -> Void
-
+    
     var body: some View {
         NavigationStack {
-            VStack(spacing: 20) {
+            VStack(spacing: 24) {
                 if step == 0 {
-                    TextField("Type of place (e.g. Restaurant)", text: $placeType)
-                        .textFieldStyle(.roundedBorder)
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("What kind of place are you looking for?")
+                            .font(.title3.bold())
+                            .padding()
+                        
+                        TextField("e.g. Restaurant, Park, Temple", text: $placeType)
+                            .textFieldStyle(.roundedBorder)
+                            .padding(.horizontal)
 
-                    if let errorMessage {
-                        Text(errorMessage).foregroundColor(.red)
-                    }
-
-                    Button("Start") {
-                        Task { await start() }
-                    }
-                    .disabled(placeType.isEmpty)
-                    .buttonStyle(.borderedProminent)
-                } else if let q = currentQuestion {
-                    Text(q.question ?? "No Existing Question")
-                        .font(.headline)
-
-                    ForEach(q.options ?? [], id: \.self) { option in
-                        Button(option) {
-                            Task {
-                                answers[q.question ?? ""] = option
-                                await askNext()
-                            }
+                        if let errorMessage {
+                            Text(errorMessage)
+                                .foregroundColor(.red)
+                                .font(.footnote)
+                                .padding(.horizontal)
                         }
-                        .buttonStyle(.bordered)
+
+                        Button(action: {
+                            Task { await start() }
+                        }) {
+                            Label("Start", systemImage: "paperplane.fill")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .glassEffect(.regular.tint(color1.color).interactive())
+                        .buttonStyle(.borderedProminent)
+                        .padding(.horizontal)
+                        .disabled(placeType.trimmingCharacters(in: .whitespaces).isEmpty)
                     }
-                } else if isThinking {
-                    ProgressView("Thinking...")
+                } else if let q = currentQuestion {
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text(q.question ?? "Loading...")
+                            .fontDesign(.rounded)
+                            .multilineTextAlignment(.leading)
+                            .lineLimit(nil) // <- unlimited lines
+                            .fixedSize(horizontal: false, vertical: true) // <- expand vertically, wrap lines
+                            .transition(.opacity)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal)
+
+                        ForEach(q.options ?? [], id: \.self) { option in
+                            Button(action: {
+                                Task {
+                                    answers[q.question ?? ""] = option
+                                    await askNext()
+                                }
+                            }) {
+                                Text(option)
+                                    .frame(maxWidth: .infinity)
+                            }
+                            .glassEffect(.regular.tint(color1.color).interactive())
+                            .buttonStyle(.borderedProminent)
+                            .padding(.horizontal)
+                        }
+                    }
                 }
+
+//                if isThinking {
+//                    VStack{
+//                        BlinkingImage()
+//                            .padding(20)
+//                            .tint(color2.color)
+//                        Text("Thinking...")
+//                            .font(.rounded)
+//                    }
+//                    
+//                }
 
                 Spacer()
             }
-            .padding()
+            .padding(.top, 40)
+            .animation(.easeInOut, value: isThinking)
             .navigationTitle("Add Place")
+            .navigationBarTitleDisplayMode(.inline)
         }
     }
 
+    
     func start() async {
         do {
+            placeType = placeType.trimmingCharacters(in: .whitespacesAndNewlines)
+            
+            currentQuestion = nil
+            answers = [:]
+            emoji = ""
+            isThinking = true
+            errorMessage = nil
+            
             guard let member = try? JSONDecoder().decode(Member.self, from: memberData ?? Data()) else {
                 errorMessage = "Couldn't load your member info."
                 return
             }
-
+            
             locationName = await resolveLocationName(from: member.coordinate)
             step = 1
             isThinking = true
-
+            
             let emojiSession = LanguageModelSession(instructions: "Generate a single character that is an emoji.")
             let emojiResponse = try await emojiSession.respond(
                 to: "Generate a single character that's an emoji representing the place type \(placeType).",
@@ -75,79 +125,89 @@ struct AddPlaceView: View {
             )
             emoji = emojiResponse.content.emoji
             isThinking = false
-
+            
             await askNext()
-
+            
         } catch {
             errorMessage = "Something went wrong. Please try again."
             print("Start Error: \(error)")
         }
     }
-
+    
     func askNext() async {
         isThinking = true
+        defer { isThinking = false }
+        
         do {
             let session = LanguageModelSession(
                 instructions: """
                 You are a culturally aware assistant helping a user narrow down their ideal type of \(placeType) in \(locationName). Use a step-by-step questioning approach, asking only highly relevant, high-impact questions based on prior answers and location context.
-
+                
                 Each response must follow one of two *exclusive* formats:
-
+                
                 1. **If another question is needed:**
                    - Provide a clear, specific question in the `question` field.
-                   - Provide 2–5 culturally appropriate, well-phrased options in the `options` array.
+                   - Provide 2–4 culturally appropriate, well-phrased options in the `options` array.
                    - Leave the `description` field empty.
-
+                
                 2. **If no more questions are needed:**
                    - Leave `question` and `options` completely empty.
                    - Use the `description` field to write a short, vivid, and natural-sounding summary of the kind of place that fits the user's preferences. It should feel like a confident recommendation or refined category.
-
+                
                 Important:
                 - Never fill both `description` and `question`/`options` at the same time.
                 - Only ask questions that significantly help narrow down preferences.
                 - Avoid generic or repetitive questions.
                 - Contextualize to the location when relevant (e.g., popular cuisines in Hyderabad).
-
-                Example:
-                If the user has already chosen “South Indian” cuisine and “Fast Food,” you probably don’t need to ask about dining type again — just summarize something like:
-                > “A budget-friendly, casual South Indian eatery in Hyderabad with dosa and idli as staples.”
+                
+                ALWAYS ASK necessary questions such as dietary requirements first.
+                
+                You are to ask a maximum of 5 follow-up questions and then generate a 'description' by keeping both `question` and `options` empty.
                 """
             )
-
-            let response = try await session.respond(
-                to: """
-                The user is looking for a \(placeType) in \(locationName).
-                They’ve already answered: \(answers).
-
-                Either:
-                - Ask one more highly relevant question to clarify preferences (question + options), OR
-                - Summarize the best-fit place based on the current answers (description only).
-                Never mix the two.
-                """,
-                generating: PlaceQuestion.self
-            )
-
-
-            if let question = response.content.question {
-                currentQuestion = response.content
-            } else if let desc = response.content.description {
-                // Done!
+            
+            let prompt = step >= 5
+            ? """
+            The user is looking for a \(placeType) in \(locationName).
+            They’ve already answered: \(answers).
+            Summarize the best-fit place based on the current answers (description only). Do NOT generate 'question' or options; leave them fully empty.
+            """
+            : """
+            The user is looking for a \(placeType) in \(locationName).
+            They’ve already answered: \(answers).
+            - Ask one more highly relevant question to clarify preferences (question + options), OR
+            - Summarize the best-fit place based on the current answers (description only).
+            Never mix the two. Do NOT generate 'question' and 'options' if not necessary or if 7 questions have been asked.
+            """
+            
+            let stream = session.streamResponse(to: prompt, generating: PlaceQuestion.self)
+            
+            for try await partial in stream {
+                self.currentQuestion = partial // could also update live here if needed
+            }
+            
+            guard let response = currentQuestion else {
+                errorMessage = "No response received."
+                return
+            }
+            
+            if let question = response.question?.trimmingCharacters(in: .whitespacesAndNewlines), !question.isEmpty {
+                currentQuestion = response
+            } else if let desc = response.description?.trimmingCharacters(in: .whitespacesAndNewlines), !desc.isEmpty, step >= 2 {
                 currentQuestion = nil
-                isThinking = false
                 step = 0
-
-                let newPlace = Place(name: placeType, descriptionAI: desc, emoji: emoji)
-                onComplete(newPlace)
+                
+                draftPlace = Place(id: UUID().uuidString, name: placeType, descriptionAI: desc, emoji: emoji)
                 dismiss()
             } else {
-                // Retry if no question or description
-                await askNext()
+                await askNext() // retry if invalid
             }
-
+            
         } catch {
             errorMessage = "Failed to generate more information."
             print("AskNext Error: \(error)")
         }
-        isThinking = false
+        
+        step += 1
     }
 }

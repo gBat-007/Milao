@@ -26,14 +26,14 @@ struct ContentView: View {
     }
 
     var body: some View {
-        VStack {
-            Button("Start Dynamic Island Activity") {
-                TimerManager.shared.startTimer(duration: 10)
-            }
-            Button("Stop Activity") {
-                TimerManager.shared.stopTimer()
-            }
-        }
+//        VStack {
+//            Button("Start Dynamic Island Activity") {
+//                TimerManager.shared.startTimer(duration: 10)
+//            }
+//            Button("Stop Activity") {
+//                TimerManager.shared.stopTimer()
+//            }
+//        }
         
         NavigationStack {
             EventsList(events: $events)
@@ -53,6 +53,7 @@ struct ContentView: View {
                             showAddMenu = true
                         }
                         .sheet(isPresented: $showAddMenu) {
+//                            AddEventMenuView() needs to come here when fixed!!!
                             CreateEventView { newEvent in
                                 events.append(newEvent)
                                 LocalEventStore().save(event: newEvent)
@@ -131,6 +132,10 @@ struct EventRow: View {
                     Text(event.title)
                         .font(.headline)
                         .foregroundColor(textColor)
+                    
+                    Text(event.eventDate.formatted(.dateTime.weekday().month().day().year()))
+                            .font(.subheadline)
+                            .foregroundColor(subTextColor)
                     
                     HStack(spacing: 12) {
                         Label("\(event.membersNum)", systemImage: "person.3.fill")

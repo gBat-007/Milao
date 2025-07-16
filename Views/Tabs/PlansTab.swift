@@ -1,5 +1,4 @@
 import SwiftUI
-
 struct PlansTab: View {
     @Binding var plans: [Plan]
     @Binding var presentAddPlanSheet: Bool
