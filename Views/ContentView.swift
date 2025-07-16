@@ -26,15 +26,6 @@ struct ContentView: View {
     }
 
     var body: some View {
-//        VStack {
-//            Button("Start Dynamic Island Activity") {
-//                TimerManager.shared.startTimer(duration: 10)
-//            }
-//            Button("Stop Activity") {
-//                TimerManager.shared.stopTimer()
-//            }
-//        }
-        
         NavigationStack {
             EventsList(events: $events)
                 .navigationTitle("My Events")
@@ -56,6 +47,13 @@ struct ContentView: View {
 //                            AddEventMenuView() needs to come here when fixed!!!
                             CreateEventView { newEvent in
                                 events.append(newEvent)
+                                if let soonest = events
+                                    .filter({ $0.eventDate > Date() })
+                                    .sorted(by: { $0.eventDate < $1.eventDate })
+                                    .first {
+                                    
+                                    TimerManager.shared.startTimer(duration: 10, event: soonest)
+                                }
                                 LocalEventStore().save(event: newEvent)
                             }
                         }
