@@ -2,6 +2,7 @@ import SwiftUI
 struct PlansTab: View {
     @Binding var event: Event
     @Binding var presentAddLocSheet: Bool
+    @State private var showingMapSheet = false
     var body: some View {
         NavigationStack{
             VStack {
@@ -26,6 +27,23 @@ struct PlansTab: View {
                     .padding(.vertical, 4)
                 }
                 .listStyle(.insetGrouped)
+                Spacer()
+                HStack{
+                    Spacer()
+                    Button {
+                            showingMapSheet = true
+                        } label: {
+                            Image(systemName: "map")
+                                .padding(10)
+                                .background(.thinMaterial)
+                                .clipShape(Circle())
+                                .shadow(radius: 3)
+                        }
+                        .padding()
+                }
+                .sheet(isPresented: $showingMapSheet) {
+                    MultiLocationView(locations: $event.plan.locations)
+                }
             }
             .sheet(isPresented: $presentAddLocSheet) {
                 if event.places.count > event.plan.locations.count {

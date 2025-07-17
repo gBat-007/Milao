@@ -33,7 +33,7 @@ func regionThatFits(locations: [Location]) -> MKCoordinateRegion {
 }
 
 
-struct MultLocationView: View {
+struct MultiLocationView: View {
     @Binding var locations: [Location]
     @State private var position: MapCameraPosition = .automatic // or use .region if you prefer
     //    @State private var region: MKCoordinateRegion

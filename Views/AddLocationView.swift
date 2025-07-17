@@ -47,10 +47,10 @@ struct LocationETAEstimator: Tool {
         
     @Generable
     struct Arguments: Codable {
-        @Guide(description: "The latitude of the origin of the journey", .range(-90...90))
+        @Guide(description: "The latitude of the start of the journey", .range(-90...90))
         let fromLatitude: Double
 
-        @Guide(description: "The longitude of the origin of the journey", .range(-180...180))
+        @Guide(description: "The longitude of the start of the journey", .range(-180...180))
         let fromLongitude: Double
 
         @Guide(description: "The latitude of the destination", .range(-90...90))
@@ -99,10 +99,10 @@ struct LocationSearchTool: Tool {
     
             @Generable
             struct SearchResult: Codable {
-                @Guide(description: "The name of the location result, such as a venue or business name.")
+                @Guide(description: "The name of the location result")
                 let name: String
 
-                @Guide(description: "A more detailed description or subtitle of the location, often including address or additional context.")
+                @Guide(description: "A more detailed description or subtitle of the location")
                 let subtitle: String
 
                 @Guide(description: "The latitude coordinate of the found destination.", .range(-90...90))
@@ -124,24 +124,20 @@ struct LocationSearchTool: Tool {
 
             let response = try await MKLocalSearch(request: request).start()
 
-            let results: [SearchResult] = response.mapItems.prefix(5).map {
-                SearchResult(
+            let results: [PossibleLocation] = response.mapItems.prefix(5).map {
+                PossibleLocation(
+                    placeType: $0.placemark.title ?? "Unknown",
                     name: $0.name ?? "Unknown",
-                    subtitle: $0.placemark.title ?? "",
-                    latitude: $0.placemark.coordinate.latitude,
-                    longitude: $0.placemark.coordinate.longitude
+                    estimatedTimeArrivalSeconds: 0.0,
+                    resultLatitude: $0.placemark.coordinate.latitude,
+                    resultLongitude: $0.placemark.coordinate.longitude,
+                    details: $0.placemark.description
                 )
             }
 
             return ToolOutput(GeneratedContent(results))
         }
     }
-@Generable
-struct LocResult {
-    let name: String
-    let subtitle: String
-    let coordinate: LatitudeLongitudeCoordinate
-}
 //
 //extension Result: ConvertibleToGeneratedContent {
 //    var generatedContent: GeneratedContent {

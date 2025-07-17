@@ -4,29 +4,29 @@ import FoundationModels
 
 @Generable
 struct PossibleLocations {
-    @Guide(description: "A list of potential real locations, each with details like type, name, ETA, and coordinates.")
+    @Guide(description: "A list of possible locations")
     let locations: [PossibleLocation]
 }
 
 @Generable
 struct PossibleLocation {
-    @Guide(description: "The type of place, such as 'restaurant', 'hotel', 'theater', or 'park'.")
+//    @Guide(description: "The place category, like 'restaurant' or 'hotel'.")
     var placeType: String
 
-    @Guide(description: "The name of the location, typically a business or landmark name.")
+//    @Guide(description: "The place name, such as a business or landmark.")
     var name: String
 
-    @Guide(description: "The estimated time it would take to travel to this location, in seconds.")
-    var eta: TimeInterval
+//    @Guide(description: "Estimated travel time in seconds.")
+    var estimatedTimeArrivalSeconds: TimeInterval
 
-    @Guide(description: "The latitude coordinate of the potential destination.", .range(-90...90))
-    var latitude: Double
+    @Guide(description: "Latitude of the destination.", .range(-90...90))
+    var resultLatitude: Double
 
-    @Guide(description: "The longitude coordinate of the potential destination.", .range(-180...180))
-    var longitude: Double
+    @Guide(description: "Longitude of the destination.", .range(-180...180))
+    var resultLongitude: Double
 
-    @Guide(description: "A descriptive summary of the place, which could include its address, features, or notable context.")
-    var description: String
+//    @Guide(description: "Extra info")
+    var details: String
 }
 
 
@@ -64,14 +64,14 @@ struct AIRecommendationView: View {
                         onSelect(Location(
                             id: UUID().uuidString,
                             name: loc.name,
-                            coordinate: Coordinate(latitude: loc.latitude, longitude: loc.longitude),
+                            coordinate: Coordinate(latitude: loc.resultLatitude, longitude: loc.resultLongitude),
                             ofPlace: event.places[event.plan.locations.count]
                         ))
                     } label: {
                         VStack(alignment: .leading, spacing: 6) {
                             Text(loc.name).font(.headline)
-                            Text(loc.description).font(.subheadline)
-                            Text("ETA: \(formattedETA(loc.eta))")
+                            Text(loc.details).font(.subheadline)
+                            Text("ETA: \(formattedETA(loc.estimatedTimeArrivalSeconds))")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -119,12 +119,12 @@ Return: name, description, coordinates, and ETA. ETA must always exceed 1 minute
 
                         let prompt = """
             Find 5 real-world places for this theme: "\(themePlace.name)" — "\(themePlace.descriptionAI)".
-            Use the tools to:
-            1. Search for real locations.
-            2. Estimate travel time.
-            
-            Use the provided tools including "searchNearbyLocations" to find a real place matching the given descriptions near this location: (latitude: \(coord.latitude), longitude: \(coord.longitude)). Then use "estimateLocationETAs" to find the ETA of each location you find.
-            Return results only after using the tools. Do NOT guess names or coordinates.
+                        Use the tools to:
+                        1. Search for real locations.
+                        2. Estimate travel time.
+                        
+                        Use the provided tools including "searchNearbyLocations" to find a real place matching the given descriptions near this location: (latitude: \(coord.latitude), longitude: \(coord.longitude)). Should be within 2 degrees latitude and 2 degrees longitude. Then use "estimateLocationETAs" to find the ETA of each location you find.
+                        Return results only after using the tools. Do NOT guess names or coordinates.
             """
 
 

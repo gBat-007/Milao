@@ -15,11 +15,11 @@ struct SettingsTab: View {
             }
             .onChange(of: primaryClr) {
                 event.bgColor1 = CodableColor(color: primaryClr)
-                event.saveToDatabase()
+//                event.saveToDatabase()
             }
             .onChange(of: secondaryClr) {
                 event.bgColor2 = CodableColor(color: secondaryClr)
-                event.saveToDatabase()
+//                event.saveToDatabase()
             }
 
             Section(header: Text("Event Info")) {
@@ -30,15 +30,15 @@ struct SettingsTab: View {
                         .multilineTextAlignment(.trailing)
                         .frame(width: 50)
                 }
-                .onChange(of: event.emoji) {
-                    event.saveToDatabase()
-                }
+//                .onChange(of: event.emoji) {
+//                    event.saveToDatabase()
+//                }
 
                 DatePicker("Event Date & Time", selection: $event.eventDate, displayedComponents: [.date, .hourAndMinute])
                     .datePickerStyle(.graphical)
-                    .onChange(of: event.eventDate) {
-                        event.saveToDatabase()
-                    }
+//                    .onChange(of: event.eventDate) {
+//                        event.saveToDatabase()
+//                    }
             }
             
         }
