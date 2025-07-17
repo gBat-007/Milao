@@ -1,27 +1,52 @@
-import FirebaseFirestore
+import FirebaseDatabase
+import Foundation
 
-class EventRepository {
-    private let db = Firestore.firestore()
+func saveEventRDB(_ event: Event, completion: @escaping (Result<Void, Error>) -> Void) {
+    let ref = Database.database().reference()
+    let id = event.id ?? UUID().uuidString
+    let eventRef = ref.child("events").child(id)
 
-    func createEvent(_ event: Event, completion: @escaping (Result<String, Error>) -> Void) {
-        do {
-            let ref = try db.collection("events").addDocument(from: event)
-            completion(.success(ref.documentID))
-        } catch {
-            completion(.failure(error))
-        }
-    }
+    var eventToSave = event
+    eventToSave.id = id
 
-    func joinEvent(inviteCode: String, completion: @escaping (Result<Event, Error>) -> Void) {
-        db.collection("events")
-            .whereField("inviteCode", isEqualTo: inviteCode)
-            .getDocuments { snapshot, error in
-                if let e = error { return completion(.failure(e)) }
-                guard let data = snapshot?.documents.first?.data(),
-                      let event = try? JSONDecoder().decode(Event.self, from: JSONSerialization.data(withJSONObject: data)) else {
-                    return completion(.failure(NSError(domain: "", code: 0)))
+    do {
+        let data = try JSONEncoder().encode(eventToSave)
+        if let dict = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            eventRef.setValue(dict) { error, _ in
+                if let error = error {
+                    completion(.failure(error))
+                } else {
+                    completion(.success(()))
                 }
-                completion(.success(event))
             }
+        } else {
+            completion(.failure(NSError(domain: "EncodingError", code: 0)))
+        }
+    } catch {
+        completion(.failure(error))
     }
 }
+
+
+func observeEventsRDB(onChange: @escaping ([Event]) -> Void) {
+    let ref = Database.database().reference().child("events")
+    
+    ref.observe(.value) { snapshot in
+        var events: [Event] = []
+        for child in snapshot.children {
+            if let snap = child as? DataSnapshot,
+               let dict = snap.value as? [String: Any] {
+                do {
+                    let data = try JSONSerialization.data(withJSONObject: dict)
+                    var event = try JSONDecoder().decode(Event.self, from: data)
+                    event.id = snap.key
+                    events.append(event)
+                } catch {
+                    print("Error decoding: \(error)")
+                }
+            }
+        }
+        onChange(events)
+    }
+}
+

@@ -2,13 +2,13 @@ import SwiftUI
 import UIKit
 
 struct ChatsTab: View {
-    @Binding var chats: [Chat]
+    @Binding var event: Event
     @Binding var presentAddChatSheet: Bool
 
     var body: some View {
         VStack {
-            List(chats.indices, id: \.self) { index in
-                let chat = chats[index]
+            List(event.chats.indices, id: \.self) { index in
+                let chat = event.chats[index]
                 HStack {
                     Text(chat.emoji)
                         .font(.largeTitle)
@@ -30,7 +30,7 @@ struct ChatsTab: View {
         }
         .sheet(isPresented: $presentAddChatSheet) {
             AddChatView { newChat in
-                chats.append(newChat)
+                event.chats.append(newChat)
             }
             .presentationDetents([.medium])
         }

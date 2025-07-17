@@ -1,15 +1,15 @@
 import SwiftUI
 struct PlansTab: View {
-    @Binding var plans: [Plan]
+    @Binding var event: Event
     @Binding var presentAddPlanSheet: Bool
     var body: some View {
         NavigationStack{
             VStack {
-                List(plans.indices, id: \.self) { index in
+                List(event.plans.indices, id: \.self) { index in
                     HStack {
                         Image(systemName: "map.fill")
                             .foregroundColor(.accentColor)
-                        Text(plans[index].name)
+                        Text(event.plans[index].name)
                             .font(.body)
                             .fontWeight(.medium)
                     }

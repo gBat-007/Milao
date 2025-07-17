@@ -1,38 +1,41 @@
 import SwiftUI
 import MapKit
-
 struct EventsView: View {
     @Binding var event: Event
     @State private var selectedTab = 0
 
-    // Sheet toggles for each tab
     @State private var presentAddMemberSheet = false
     @State private var presentAddPlaceSheet = false
     @State private var presentAddPlanSheet = false
     @State private var presentAddChatSheet = false
 
     var body: some View {
-        NavigationStack{
+        NavigationStack {
             TabView(selection: $selectedTab) {
                 
                 Tab("Members", systemImage: "person.3.fill", value: 0) {
-                    MembersTab(members: $event.members, presentAddMemberSheet: $presentAddMemberSheet, inviteCode: event.inviteCode)
+                    MembersTab(members: $event.members,
+                               presentAddMemberSheet: $presentAddMemberSheet,
+                               inviteCode: event.inviteCode)
                 }
 
                 Tab("Locations", systemImage: "mappin.and.ellipse", value: 1) {
-                    PlacesTab(places: $event.places, presentAddPlaceSheet: $presentAddPlaceSheet, bgColor1: $event.bgColor1, bgColor2: $event.bgColor2)
+                    PlacesTab(event: $event,
+                              presentAddPlaceSheet: $presentAddPlaceSheet)
                 }
 
                 Tab("Plan", systemImage: "map", value: 2) {
-                    PlansTab(plans: $event.plans, presentAddPlanSheet: $presentAddPlanSheet)
+                    PlansTab(event: $event,
+                             presentAddPlanSheet: $presentAddPlanSheet)
                 }
 
                 Tab("Chats", systemImage: "message", value: 3) {
-                    ChatsTab(chats: $event.chats, presentAddChatSheet: $presentAddChatSheet)
+                    ChatsTab(event: $event,
+                             presentAddChatSheet: $presentAddChatSheet)
                 }
 
                 Tab("Settings", systemImage: "gear", value: 4) {
-                    SettingsTab(primaryColor: $event.bgColor1, secondaryColor: $event.bgColor2, eventEmoji: $event.emoji, eventDate: $event.eventDate)
+                    SettingsTab(event: $event)
                 }
             }
             .navigationTitle($event.title)
@@ -65,11 +68,10 @@ struct EventsView: View {
                             Label("New Chat", systemImage: "plus.bubble")
                         }
                     default:
-                        EmptyView() // No toolbar item in Settings
+                        EmptyView()
                     }
                 }
             }
         }
-        
     }
 }

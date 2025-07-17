@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import FirebaseDatabase
 
 class LocalEventStore {
     private let key = "local_events"
@@ -20,16 +21,23 @@ class LocalEventStore {
         return events
     }
 
+    func save(events: [Event]) {
+        if let data = try? JSONEncoder().encode(events) {
+            UserDefaults.standard.set(data, forKey: key)
+        }
+    }
+
     func clear() {
         UserDefaults.standard.removeObject(forKey: key)
     }
 }
 
-
 struct AddEventMenuView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var createMode = false
     @State private var joinMode = false
+
+    var onEventCreatedOrJoined: (Event) -> Void
 
     var body: some View {
         NavigationStack {
@@ -42,15 +50,20 @@ struct AddEventMenuView: View {
             .navigationTitle("Add Event")
             .sheet(isPresented: $createMode) {
                 CreateEventView { newEvent in
+                    onEventCreatedOrJoined(newEvent)
                     dismiss()
                 }
             }
             .sheet(isPresented: $joinMode) {
-                JoinEventView()
+                JoinEventView { joinedEvent in
+                    onEventCreatedOrJoined(joinedEvent)
+                    dismiss()
+                }
             }
         }
     }
 }
+
 
 struct CreateEventView: View {
     @Environment(\.dismiss) private var dismiss
@@ -62,7 +75,6 @@ struct CreateEventView: View {
     @State private var inviteCode = Event.generateInviteCode()
     @State private var isSaving = false
     @State private var errorMessage: String?
-    private let repo = EventRepository()
     private var dateRange: ClosedRange<Date> {
         let now = Date()
         let oneYearFromNow = Calendar.current.date(byAdding: .year, value: 1, to: now)!
@@ -117,11 +129,19 @@ struct CreateEventView: View {
     }
     private func saveEvent() {
         isSaving = true
+        
+        guard let memberData = UserDefaults.standard.data(forKey: "memberData"),
+              let currentMember = try? JSONDecoder().decode(Member.self, from: memberData) else {
+            errorMessage = "Could not load current member."
+            isSaving = false
+            return
+        }
+        
         let event = Event(
             id: UUID().uuidString,
             title: title,
             emoji: emoji,
-            members: [],
+            members: [currentMember],
             chats: [],
             places: [],
             plans: [],
@@ -133,30 +153,43 @@ struct CreateEventView: View {
         
         // Save locally no matter what
         LocalEventStore().save(event: event)
-        
-        // Then try cloud, if it fails, show a message
-        repo.createEvent(event) { result in
-            isSaving = false
-            switch result {
-            case .success:
-                onSuccess(event)
-                dismiss()
-            case .failure(let error):
-                errorMessage = "Saved locally. Could not upload: \(error.localizedDescription)"
-                onSuccess(event) // Still proceed as if it's saved
-                dismiss()
+        saveEventRDB(event) { result in
+            DispatchQueue.main.async {
+                isSaving = false
+                switch result {
+                case .success:
+                    onSuccess(event) // <- this ensures the event shows up in the list
+                    dismiss()
+                case .failure(let error):
+                    print("Save failed: \(error)")
+                    // show error toast
+                }
             }
         }
+
+//        // Then try cloud, if it fails, show a message
+//        repo.createEvent(event) { result in
+//            isSaving = false
+//            switch result {
+//            case .success:
+//                onSuccess(event)
+//                dismiss()
+//            case .failure(let error):
+//                errorMessage = "Saved locally. Could not upload: \(error.localizedDescription)"
+//                onSuccess(event) // Still proceed as if it's saved
+//                dismiss()
+//            }
+//        }
     }
 }
-
 struct JoinEventView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var code = ""
     @State private var errorMessage: String?
     @State private var isJoining = false
-    private let repo = EventRepository()
-    
+
+    var onSuccess: (Event) -> Void
+
     var body: some View {
         Form {
             TextField("Invite Code", text: $code)
@@ -175,18 +208,81 @@ struct JoinEventView: View {
             }
         }
     }
-    
     private func joinEvent() {
         isJoining = true
-        repo.joinEvent(inviteCode: code) { result in
-            isJoining = false
-            switch result {
-            case .success(let event):
-                // Add local state or navigation to that event
-                dismiss()
-            case .failure:
-                errorMessage = "No event found for this code."
+        errorMessage = nil
+
+        let ref = Database.database().reference().child("events")
+
+        ref.observeSingleEvent(of: .value) { snapshot in
+            var matchedSnapshot: DataSnapshot?
+
+            for child in snapshot.children {
+                if let snap = child as? DataSnapshot,
+                   let dict = snap.value as? [String: Any],
+                   let inviteCodeInDB = dict["inviteCode"] as? String,
+                   inviteCodeInDB.uppercased() == code.uppercased() {
+                    matchedSnapshot = snap
+                    break
+                }
             }
+
+            guard let snap = matchedSnapshot,
+                  let dict = snap.value as? [String: Any] else {
+                isJoining = false
+                errorMessage = "No event found with that code."
+                return
+            }
+
+            do {
+                let data = try JSONSerialization.data(withJSONObject: dict)
+                var event = try JSONDecoder().decode(Event.self, from: data)
+                event.id = snap.key
+
+                if let memberData = UserDefaults.standard.data(forKey: "memberData"),
+                   let currentMember = try? JSONDecoder().decode(Member.self, from: memberData) {
+
+                    // Only append if not already a member
+                    if !event.members.contains(where: { $0.id == currentMember.id }) {
+                        event.members.append(currentMember)
+
+                        // Save updated event to Firebase
+                        let eventRef = ref.child(event.id ?? snap.key)
+                        let encodedData = try JSONEncoder().encode(event)
+                        let dict = try JSONSerialization.jsonObject(with: encodedData) as? [String: Any] ?? [:]
+
+                        eventRef.setValue(dict) { error, _ in
+                            isJoining = false
+                            if let error = error {
+                                errorMessage = "Joined locally, but couldn't sync: \(error.localizedDescription)"
+                            } else {
+                                errorMessage = nil
+                            }
+                            LocalEventStore().save(event: event)
+                            onSuccess(event)
+                        }
+                    } else {
+                        // Already a member
+                        isJoining = false
+                        errorMessage = nil
+                        LocalEventStore().save(event: event)
+                        onSuccess(event)
+                    }
+
+                } else {
+                    isJoining = false
+                    errorMessage = "Could not load your member profile."
+                }
+
+            } catch {
+                isJoining = false
+                errorMessage = "Could not decode event data."
+            }
+
+        } withCancel: { error in
+            isJoining = false
+            errorMessage = "Failed to fetch events: \(error.localizedDescription)"
         }
     }
+
 }

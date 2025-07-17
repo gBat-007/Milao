@@ -44,17 +44,18 @@ struct ContentView: View {
                             showAddMenu = true
                         }
                         .sheet(isPresented: $showAddMenu) {
-//                            AddEventMenuView() needs to come here when fixed!!!
-                            CreateEventView { newEvent in
-                                events.append(newEvent)
-                                if let soonest = events
-                                    .filter({ $0.eventDate > Date() })
-                                    .sorted(by: { $0.eventDate < $1.eventDate })
-                                    .first {
-                                    
-                                    TimerManager.shared.startTimer(duration: 10, event: soonest)
+                            AddEventMenuView { newEvent in
+                                var toAdd = newEvent
+                                if let currentMember = currentMember {
+                                    toAdd.members.append(currentMember)
                                 }
-                                LocalEventStore().save(event: newEvent)
+                                events.append(toAdd)
+                                LocalEventStore().save(event: toAdd)
+                                saveEventRDB(toAdd) { result in
+                                    if case let .failure(error) = result {
+                                        print("Failed to save to Firebase: \(error)")
+                                    }
+                                }
                             }
                         }
                     }
@@ -72,8 +73,12 @@ struct ContentView: View {
                 }
         }
         .onAppear {
-            events = LocalEventStore().fetchEvents()
             showOnboarding = !hasLaunchedBefore
+
+            observeEventsRDB { newEvents in
+                self.events = newEvents
+                LocalEventStore().save(events: newEvents)
+            }
         }
         .sheet(isPresented: $showOnboarding) {
             OnboardingView { member in

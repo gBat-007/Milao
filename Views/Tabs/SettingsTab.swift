@@ -1,43 +1,52 @@
 import SwiftUI
 
 struct SettingsTab: View {
-    @Binding var primaryColor: CodableColor
-    @Binding var secondaryColor: CodableColor
+    @Binding var event: Event
     @State var primaryClr: Color = Color.blue
     @State var secondaryClr: Color = Color.green
-    @Binding var eventEmoji: String
-    @Binding var eventDate: Date
     
     var body: some View {
+        
         Form {
+            
             Section(header: Text("Appearance")) {
                 ColorPicker("Primary Color", selection: $primaryClr)
                 ColorPicker("Secondary Color", selection: $secondaryClr)
             }
-            .onChange(of: primaryClr){
-                primaryColor = CodableColor(color: primaryClr)
+            .onChange(of: primaryClr) {
+                event.bgColor1 = CodableColor(color: primaryClr)
+                event.saveToDatabase()
             }
-            .onChange(of: secondaryClr){
-                secondaryColor = CodableColor(color: secondaryClr)
+            .onChange(of: secondaryClr) {
+                event.bgColor2 = CodableColor(color: secondaryClr)
+                event.saveToDatabase()
             }
 
             Section(header: Text("Event Info")) {
                 HStack {
                     Text("Emoji")
                     Spacer()
-                    TextField("😊", text: $eventEmoji)
+                    TextField("😊", text: $event.emoji)
                         .multilineTextAlignment(.trailing)
                         .frame(width: 50)
                 }
+                .onChange(of: event.emoji) {
+                    event.saveToDatabase()
+                }
 
-                DatePicker("Event Date & Time", selection: $eventDate, displayedComponents: [.date, .hourAndMinute])
+                DatePicker("Event Date & Time", selection: $event.eventDate, displayedComponents: [.date, .hourAndMinute])
                     .datePickerStyle(.graphical)
+                    .onChange(of: event.eventDate) {
+                        event.saveToDatabase()
+                    }
             }
+            
         }
         .navigationTitle("Settings")
-        .onAppear{
-            primaryClr = primaryColor.color
-            secondaryClr = secondaryColor.color
+        .onAppear {
+            primaryClr = event.bgColor1.color
+            secondaryClr = event.bgColor2.color
         }
+
     }
 }

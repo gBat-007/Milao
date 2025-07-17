@@ -5,16 +5,14 @@ import SwiftUI
 
 
 struct PlacesTab: View {
-    @Binding var places: [Place]
+    @Binding var event: Event
     @Binding var presentAddPlaceSheet: Bool
     @State private var newPlace: Place?
-    @Binding var bgColor1: CodableColor
-    @Binding var bgColor2: CodableColor
     var body: some View {
         VStack {
             List {
                 Section {
-                    ForEach($places, id: \.id) { $place in
+                    ForEach($event.places, id: \.id) { $place in
                         HStack {
                             Image(systemName: "line.3.horizontal")
                                 .foregroundColor(.gray)
@@ -29,7 +27,7 @@ struct PlacesTab: View {
         }
         .sheet(isPresented: $presentAddPlaceSheet, onDismiss: {
             if let place = newPlace {
-                places.append(
+                event.places.append(
                     Place(
                         id: UUID().uuidString,
                         name: place.name,
@@ -37,16 +35,18 @@ struct PlacesTab: View {
                         emoji: place.emoji
                     )
                 )
+                event.saveToDatabase() // <- Add this
                 newPlace = nil
             }
         }) {
-            AddPlaceView(draftPlace: $newPlace, color1: $bgColor1, color2: $bgColor2)
+            AddPlaceView(draftPlace: $newPlace, color1: $event.bgColor1, color2: $event.bgColor2)
                 .presentationDetents([.fraction(0.7)])
         }
     }
     
     func movePlace(from source: IndexSet, to destination: Int) {
-        places.move(fromOffsets: source, toOffset: destination)
+        event.places.move(fromOffsets: source, toOffset: destination)
+        event.saveToDatabase()
     }
 }
 
@@ -66,7 +66,7 @@ struct PlaceRow: View {
                         .font(.headline)
                         .foregroundColor(.primary)
                     Text(place.descriptionAI)
-                        .font(.subheadline)
+                        .font(.footnote)
 //                    HStack(spacing: 12) {
 //                        Label("\(event.membersNum)", systemImage: "person.3.fill")
 //                            .foregroundColor(.secondary)

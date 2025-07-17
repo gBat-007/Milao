@@ -9,9 +9,11 @@ import Foundation
 import MapKit
 import FoundationModels
 import FirebaseFirestore
+import FirebaseDatabase
+
 
 struct Event: Identifiable, Codable {
-    @DocumentID var id: String?
+    var id: String?
     var title: String
     var emoji: String
     var members: [Member]
@@ -76,53 +78,21 @@ struct Event: Identifiable, Codable {
     }
 }
 
-struct Coordinate: Hashable, Codable, Equatable {
-    var latitude: Double
-    var longitude: Double
+extension Event {
+    func saveToDatabase() {
+        guard let eventId = self.id else { return }
+        let ref = Database.database().reference().child("events").child(eventId)
 
-    var clLocation: CLLocationCoordinate2D {
-        CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+        do {
+            let data = try JSONEncoder().encode(self)
+            if let dict = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                ref.updateChildValues(dict)
+            }
+        } catch {
+            print("Error saving event: \(error.localizedDescription)")
+        }
     }
 }
 
 
-struct Location: Identifiable, Codable, Equatable{
-    @DocumentID var id: String?
-    var name: String
-    var coordinate: Coordinate
-}
-
-struct Plan: Identifiable, Codable, Equatable{
-    @DocumentID var id: String?
-    var name: String
-    var locations: [Location]
-}
-
-@Generable
-struct Place: Identifiable, Equatable, Codable{
-    @DocumentID var id: String?
-    var name: String
-    var descriptionAI: String
-    var emoji: String
-}
-
-let myEvents: [Event] = [
-//    Event(title: "Birthday Bash", emoji: "🥳", membersNum: 15, locationsNum: 3,
-//          members: [],
-//          chats: [Chat(title: "Birthday Bash", emoji: "🥳", membersNum: 15)],
-//          places: [],
-//          plans: [Plan(name: "Plan 1", locations: [Location(name: "Point Nemo", coordinate: Coordinate(latitude: -48.8767, longitude: -123.3933)),Location(name: "Apple Park", coordinate: Coordinate(latitude: 37.3346, longitude: -122.0090))])]
-//         ),
-//    Event(title: "Alumni Hangout", emoji: "🎓", membersNum: 23, locationsNum: 1,
-//          members: [],
-//          chats: [Chat(title: "Alumni Hangout", emoji: "🎓", membersNum: 23)],
-//          places: [],
-//          plans: [Plan(name: "Plan 1", locations: [Location(name: "Point Nemo", coordinate: Coordinate(latitude: -48.8767, longitude: -123.3933)),Location(name: "Apple Park", coordinate: Coordinate(latitude: 37.3346, longitude: -122.0090))])]
-//         ),
-//    Event(title: "Study Group", emoji: "📕", membersNum: 21, locationsNum: 4,
-//          members: [],
-//          chats: [Chat(title: "Study Group", emoji: "📕", membersNum: 21)],
-//          places: [],
-//          plans: []
-//         )
-]
+let myEvents: [Event] = []
