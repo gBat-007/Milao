@@ -50,7 +50,7 @@ struct AddPlaceView: View {
                         .padding(.horizontal)
                         .disabled(placeType.trimmingCharacters(in: .whitespaces).isEmpty)
                     }
-                } else if let q = currentQuestion {
+                } else if let q = currentQuestion  {
                     VStack(alignment: .leading, spacing: 16) {
                         Text(q.question ?? "Loading...")
                             .fontDesign(.rounded)
@@ -78,16 +78,16 @@ struct AddPlaceView: View {
                     }
                 }
 
-//                if isThinking {
-//                    VStack{
-//                        BlinkingImage()
-//                            .padding(20)
-//                            .tint(color2.color)
-//                        Text("Thinking...")
-//                            .font(.rounded)
-//                    }
-//                    
-//                }
+                else if isThinking {
+                    VStack{
+                        BlinkingImage()
+                            .padding(20)
+                            .tint(color2.color)
+                        Text("Thinking...")
+                            .fontDesign(.rounded)
+                    }
+                    
+                }
 
                 Spacer()
             }
@@ -170,13 +170,13 @@ struct AddPlaceView: View {
             ? """
             The user is looking for a \(placeType) in \(locationName).
             They’ve already answered: \(answers).
-            Summarize the best-fit place based on the current answers (description only). Do NOT generate 'question' or options; leave them fully empty.
+            Summarize the type of place the user wants based on the current answers (description only). Do NOT give an exact location or specific place, just the requirements & preferences should be summarised. Do NOT generate 'question' or options; leave them fully empty.
             """
             : """
             The user is looking for a \(placeType) in \(locationName).
             They’ve already answered: \(answers).
             - Ask one more highly relevant question to clarify preferences (question + options), OR
-            - Summarize the best-fit place based on the current answers (description only).
+            - Summarize the type of place based on the current answers (description only).
             Never mix the two. Do NOT generate 'question' and 'options' if not necessary or if 7 questions have been asked.
             """
             
@@ -192,7 +192,11 @@ struct AddPlaceView: View {
             }
             
             if let question = response.question?.trimmingCharacters(in: .whitespacesAndNewlines), !question.isEmpty {
-                currentQuestion = response
+                if response.options?.count ?? 0 > 0 {
+                    currentQuestion = response
+                } else {
+                    await askNext()
+                }
             } else if let desc = response.description?.trimmingCharacters(in: .whitespacesAndNewlines), !desc.isEmpty, step >= 2 {
                 currentQuestion = nil
                 step = 0

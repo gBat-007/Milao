@@ -2,53 +2,55 @@
 import SwiftUI
 
 
-
-
 struct PlacesTab: View {
     @Binding var event: Event
     @Binding var presentAddPlaceSheet: Bool
     @State private var newPlace: Place?
+
     var body: some View {
         VStack {
             List {
-                Section {
-                    ForEach($event.places, id: \.id) { $place in
-                        HStack {
-                            Image(systemName: "line.3.horizontal")
-                                .foregroundColor(.gray)
-                            PlaceRow(place: $place)
-                        }
-                    }
-                    .onMove(perform: movePlace)
-                    .moveDisabled(false) // ← allows drag without EditMode
+              Section {
+                ForEach(Array(event.places.enumerated()), id: \.element.id) { index, _ in
+                  HStack {
+                    Image(systemName: "line.3.horizontal")
+                      .foregroundColor(.gray)
+                    PlaceRow(place: $event.places[index])
+                  }
                 }
+                .onMove(perform: movePlace)
+              }
             }
             .listStyle(.insetGrouped)
         }
-        .sheet(isPresented: $presentAddPlaceSheet, onDismiss: {
-            if let place = newPlace {
-                event.places.append(
-                    Place(
-                        id: UUID().uuidString,
-                        name: place.name,
-                        descriptionAI: place.descriptionAI,
-                        emoji: place.emoji
-                    )
-                )
-                event.saveToDatabase() // <- Add this
-                newPlace = nil
-            }
-        }) {
+        .sheet(isPresented: $presentAddPlaceSheet) {
             AddPlaceView(draftPlace: $newPlace, color1: $event.bgColor1, color2: $event.bgColor2)
                 .presentationDetents([.fraction(0.7)])
         }
+        .onChange(of: newPlace) {
+            guard let newPlace else { return }
+            let placeToAdd = Place(
+                id: UUID().uuidString,
+                name: newPlace.name,
+                descriptionAI: newPlace.descriptionAI,
+                emoji: newPlace.emoji
+            )
+            withAnimation {
+                event.places.append(placeToAdd)
+            }
+            self.newPlace = nil  // Reset after adding
+//            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+//                event.saveToDatabase()
+//            }
+        }
     }
-    
+
     func movePlace(from source: IndexSet, to destination: Int) {
         event.places.move(fromOffsets: source, toOffset: destination)
         event.saveToDatabase()
     }
 }
+
 
 
 struct PlaceRow: View {

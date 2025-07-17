@@ -26,13 +26,13 @@ struct EventsView: View {
 
                 Tab("Plan", systemImage: "map", value: 2) {
                     PlansTab(event: $event,
-                             presentAddPlanSheet: $presentAddPlanSheet)
+                             presentAddLocSheet: $presentAddPlanSheet)
                 }
 
-                Tab("Chats", systemImage: "message", value: 3) {
-                    ChatsTab(event: $event,
-                             presentAddChatSheet: $presentAddChatSheet)
-                }
+//                Tab("Chats", systemImage: "message", value: 3) {
+//                    ChatsTab(event: $event,
+//                             presentAddChatSheet: $presentAddChatSheet)
+//                }
 
                 Tab("Settings", systemImage: "gear", value: 4) {
                     SettingsTab(event: $event)

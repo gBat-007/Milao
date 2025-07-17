@@ -14,20 +14,20 @@ struct Coordinate: Hashable, Codable, Equatable {
 
 
 struct Location: Identifiable, Codable, Equatable{
-    @DocumentID var id: String?
+    var id: String? = UUID().uuidString
     var name: String
     var coordinate: Coordinate
+    var ofPlace: Place
 }
 
 struct Plan: Identifiable, Codable, Equatable{
-    @DocumentID var id: String?
-    var name: String
+    var id: String? = UUID().uuidString
     var locations: [Location]
 }
 
 @Generable
 struct Place: Identifiable, Equatable, Codable{
-    @DocumentID var id: String?
+    var id: String? = UUID().uuidString
     var name: String
     var descriptionAI: String
     var emoji: String

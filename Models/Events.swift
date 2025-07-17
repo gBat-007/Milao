@@ -38,6 +38,7 @@ struct Event: Identifiable, Codable {
 
     /// Creates a new `Event` with empty initial arrays.
     init(title: String, emoji: String?, primaryColor: Color, secondaryColor: Color, eventDate: Date) {
+        self.id = UUID().uuidString
         self.title = title
         self.emoji = emoji ?? "x" // will later do AI stuff with this
         self.bgColor1 = CodableColor(color: primaryColor)
@@ -45,7 +46,7 @@ struct Event: Identifiable, Codable {
         self.inviteCode = Event.generateInviteCode()
         self.members = []
         self.places = []
-        self.plan = Plan(name: "", locations: [])
+        self.plan = Plan(locations: [])
         self.chats = []
         self.eventDate = eventDate
     }
@@ -83,13 +84,17 @@ extension Event {
         guard let eventId = self.id else { return }
         let ref = Database.database().reference().child("events").child(eventId)
 
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601 // or your preferred date format
+
         do {
-            let data = try JSONEncoder().encode(self)
-            if let dict = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                ref.updateChildValues(dict)
+            let data = try encoder.encode(self)
+            let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+            if let dict = json {
+                ref.setValue(dict)
             }
         } catch {
-            print("Error saving event: \(error.localizedDescription)")
+            print("Error encoding or saving event: \(error)")
         }
     }
 }

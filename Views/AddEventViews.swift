@@ -144,7 +144,7 @@ struct CreateEventView: View {
             members: [currentMember],
             chats: [],
             places: [],
-            plans: [],
+            plan: Plan(locations: []),
             eventDate: selectedDateTime,
             bgColor1: CodableColor(color: primaryColor),
             bgColor2: CodableColor(color: secondaryColor),
