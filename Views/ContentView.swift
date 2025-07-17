@@ -50,6 +50,15 @@ struct ContentView: View {
                                     toAdd.members.append(currentMember)
                                 }
                                 events.append(toAdd)
+//                                if let soonest = events{
+//                                    .filter({ $0.eventDate > Date() })
+//                                    .sorted(by: { $0.eventDate < $1.eventDate })
+//                                    .first {
+//                                        
+//                                        TimerManager.shared.startTimer(duration: 10, event: soonest)
+//                                    }
+//                                }
+                                
                                 LocalEventStore().save(event: toAdd)
                                 saveEventRDB(toAdd) { result in
                                     if case let .failure(error) = result {

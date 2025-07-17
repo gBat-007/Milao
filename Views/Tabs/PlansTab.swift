@@ -5,11 +5,11 @@ struct PlansTab: View {
     var body: some View {
         NavigationStack{
             VStack {
-                List(event.plans.indices, id: \.self) { index in
+                List(event.plan.locations.indices, id: \.self) { index in
                     HStack {
                         Image(systemName: "map.fill")
                             .foregroundColor(.accentColor)
-                        Text(event.plans[index].name)
+                        Text(event.plan.locations[index].name)
                             .font(.body)
                             .fontWeight(.medium)
                     }

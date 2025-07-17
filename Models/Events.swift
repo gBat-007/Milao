@@ -19,7 +19,7 @@ struct Event: Identifiable, Codable {
     var members: [Member]
     var chats: [Chat]
     var places: [Place]
-    var plans: [Plan]
+    var plan: Plan
     var eventDate: Date
     var membersNum: Int {
         return members.count
@@ -45,7 +45,7 @@ struct Event: Identifiable, Codable {
         self.inviteCode = Event.generateInviteCode()
         self.members = []
         self.places = []
-        self.plans = []
+        self.plan = Plan(name: "", locations: [])
         self.chats = []
         self.eventDate = eventDate
     }
@@ -58,7 +58,7 @@ struct Event: Identifiable, Codable {
         members: [Member],
         chats: [Chat],
         places: [Place],
-        plans: [Plan],
+        plan: Plan,
         eventDate: Date,
         bgColor1: CodableColor,
         bgColor2: CodableColor,
@@ -70,7 +70,7 @@ struct Event: Identifiable, Codable {
         self.members = members
         self.chats = chats
         self.places = places
-        self.plans = plans
+        self.plan = plan
         self.eventDate = eventDate
         self.bgColor1 = bgColor1
         self.bgColor2 = bgColor2
