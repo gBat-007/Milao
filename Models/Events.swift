@@ -183,3 +183,14 @@ struct DeviceManager {
         return UIDevice.current.identifierForVendor?.uuidString ?? "unknown-device"
     }
 }
+
+extension Event {
+    var asWidgetEvent: WidgetEvent {
+        WidgetEvent(
+            title: self.title,
+            emoji: self.emoji,
+            eventDate: self.eventDate
+        )
+    }
+}
+

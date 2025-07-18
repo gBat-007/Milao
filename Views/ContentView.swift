@@ -57,6 +57,13 @@ struct ContentView: View {
                                     if case let .failure(error) = result {
                                         print("❌ Failed to save to Firebase: \(error)")
                                     } else {
+                                        if let soonest = events
+                                            .filter({ $0.eventDate > Date() })
+                                            .sorted(by: { $0.eventDate < $1.eventDate })
+                                            .first {
+                                            
+                                            TimerManager.shared.startSimpleTimer(to: soonest.asWidgetEvent)
+                                        }
                                         print("✅ Event saved to Firebase.")
                                     }
                                 }
