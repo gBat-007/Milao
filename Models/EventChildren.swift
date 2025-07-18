@@ -2,6 +2,7 @@ import SwiftUI
 import MapKit
 import FirebaseFirestore
 import FoundationModels
+import GeoToolbox
 
 struct Coordinate: Hashable, Codable, Equatable {
     var latitude: Double
@@ -18,6 +19,17 @@ struct Location: Identifiable, Codable, Equatable{
     var name: String
     var coordinate: Coordinate
     var ofPlace: Place
+}
+
+extension Location {
+    var locDescriptor: PlaceDescriptor {
+        PlaceDescriptor(
+            representations: [.coordinate(self.coordinate.clLocation)], commonName: self.name
+        )
+    }
+    var request: MKMapItemRequest {
+        MKMapItemRequest(placeDescriptor: locDescriptor)
+    }
 }
 
 struct Plan: Identifiable, Codable, Equatable{

@@ -1,26 +1,18 @@
 import SwiftUI
 
-struct Message: Identifiable {
-    let id = UUID()
-    let text: String
-    let isSentByUser: Bool
-}
-
 struct ChatsView: View {
-    @State private var messages: [Message] = [
-        Message(text: "Hey there!", isSentByUser: false),
-        Message(text: "Hi! How's it going?", isSentByUser: true)
-    ]
-    @State private var newMessage: String = ""
+    @Binding var chat: Chat
+    var thisMember: String
+    @Binding var newMessage: String
     
     var body: some View {
         VStack {
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 10) {
-                        ForEach(messages) { message in
+                        ForEach(chat.messages) { message in
                             HStack {
-                                if message.isSentByUser {
+                                if message.isSentByMemberName == thisMember {
                                     Spacer()
                                     Text(message.text)
                                         .padding()
@@ -30,7 +22,7 @@ struct ChatsView: View {
                                 } else {
                                     Text(message.text)
                                         .padding()
-                                        .background(Color.gray.opacity(0.2))
+                                        .background(Color.orange)
                                         .foregroundColor(.black)
                                         .cornerRadius(12)
                                     Spacer()
@@ -41,8 +33,8 @@ struct ChatsView: View {
                     }
                     .padding()
                 }
-                .onChange(of: messages.count) { _ in
-                    if let last = messages.last {
+                .onChange(of: chat.messages.count) { _ in
+                    if let last = chat.messages.last {
                         proxy.scrollTo(last.id, anchor: .bottom)
                     }
                 }
@@ -72,7 +64,7 @@ struct ChatsView: View {
     func sendMessage() {
         let trimmed = newMessage.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return }
-        messages.append(Message(text: trimmed, isSentByUser: true))
+        chat.messages.append(Message(text: trimmed, isSentByMemberName: thisMember))
         newMessage = ""
     }
 }

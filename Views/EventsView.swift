@@ -14,7 +14,7 @@ struct EventsView: View {
             TabView(selection: $selectedTab) {
                 
                 Tab("Members", systemImage: "person.3.fill", value: 0) {
-                    MembersTab(members: $event.members,
+                    MembersTab(event: $event,
                                presentAddMemberSheet: $presentAddMemberSheet,
                                inviteCode: event.inviteCode)
                 }
@@ -29,10 +29,10 @@ struct EventsView: View {
                              presentAddLocSheet: $presentAddPlanSheet)
                 }
 
-//                Tab("Chats", systemImage: "message", value: 3) {
-//                    ChatsTab(event: $event,
-//                             presentAddChatSheet: $presentAddChatSheet)
-//                }
+                Tab("Chats", systemImage: "message", value: 3) {
+                    ChatsTab(event: $event,
+                             presentAddChatSheet: $presentAddChatSheet)
+                }
 
                 Tab("Settings", systemImage: "gear", value: 4) {
                     SettingsTab(event: $event)

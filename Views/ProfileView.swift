@@ -129,3 +129,32 @@ struct ProfileView: View {
         }
     }
 }
+import CoreLocation
+import Contacts
+
+func getReverseGeocode(coord: CLLocationCoordinate2D, completion: @escaping (String?) -> Void) {
+    let geocoder = CLGeocoder()
+    let location = CLLocation(latitude: coord.latitude, longitude: coord.longitude)
+    
+    geocoder.reverseGeocodeLocation(location) { placemarks, error in
+        guard let placemark = placemarks?.first, error == nil else {
+            completion(nil)
+            return
+        }
+
+        if let postalAddr = placemark.postalAddress {
+            let formatted = CNPostalAddressFormatter.string(from: postalAddr, style: .mailingAddress)
+            completion(formatted)
+        } else {
+            let parts = [
+                placemark.name,
+                placemark.thoroughfare,
+                placemark.locality,
+                placemark.administrativeArea,
+                placemark.country
+            ]
+            completion(parts.compactMap { $0 }.joined(separator: ", "))
+        }
+    }
+}
+

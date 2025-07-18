@@ -1,30 +1,61 @@
 import SwiftUI
 import UIKit
+//
+//  Events.swift
+//  Milao
+//
+//  Created by Gautam Bansal on 09/07/25.
+//
+
+import Foundation
+
+struct Chat: Identifiable, Codable, Hashable {
+    var id: String = UUID().uuidString
+    var title: String
+    var emoji: String
+    var messages: [Message]
+}
+
+struct Message: Identifiable, Codable, Hashable {
+    var id: String = UUID().uuidString
+    let text: String
+    let isSentByMemberName: String
+}
 
 struct ChatsTab: View {
     @Binding var event: Event
     @Binding var presentAddChatSheet: Bool
-
+    @AppStorage("memberData") var memberData: Data?
+    @State var currentMemberName: String = ""
+    @State var newMessage: String = ""
     var body: some View {
         VStack {
-            List(event.chats.indices, id: \.self) { index in
-                let chat = event.chats[index]
-                HStack {
-                    Text(chat.emoji)
-                        .font(.largeTitle)
-                        .frame(width: 40)
-
-                    VStack(alignment: .leading) {
-                        Text(chat.title)
-                            .font(.headline)
-                            .fontWeight(.semibold)
-
-                        Text("\(chat.membersNum) member\(chat.membersNum == 1 ? "" : "s")")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
+            List {
+                ForEach($event.chats) { $chat in
+                    NavigationStack{
+                        NavigationLink(destination: ChatsView(chat: $chat, thisMember: currentMemberName, newMessage: $newMessage)) {
+                            HStack {
+                                Text(chat.emoji)
+                                    .font(.largeTitle)
+                                    .frame(width: 40)
+                                
+                                VStack(alignment: .leading) {
+                                    Text(chat.title)
+                                        .font(.headline)
+                                        .fontWeight(.semibold)
+                                }
+                            }
+                            .padding(.vertical, 4)
+                        }
+                        
                     }
                 }
-                .padding(.vertical, 4)
+            }
+            .onAppear {
+                currentMemberName = Member.decode(from: memberData)?.name ?? "Unknown Name"
+            }
+            .onChange(of: newMessage){
+                event.saveToDatabase()
             }
             .listStyle(.insetGrouped)
         }
@@ -65,7 +96,7 @@ struct AddChatView: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Add") {
-                        let newChat = Chat(title: title, emoji: emoji, membersNum: membersNum)
+                        let newChat = Chat(title: title, emoji: emoji, messages: [])
                         onAdd(newChat)
                         dismiss()
                     }

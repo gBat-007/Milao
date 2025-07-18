@@ -3,7 +3,13 @@
 //  Milao
 //
 //  Created by Gautam Bansal on 09/07/25.
+////
+//  ContentView.swift
+//  Milao
 //
+//  Created by Gautam Bansal on 09/07/25.
+//
+
 import SwiftUI
 import ActivityKit
 
@@ -16,7 +22,8 @@ struct ContentView: View {
 
     @State private var showOnboarding = false
     @State private var currentMember: Member?
-    
+    @State private var showProfileSheet = false // ✅ New flag
+
     func currentMemberBinding() -> Binding<Member>? {
         guard let currentMember else { return nil }
         return Binding(
@@ -31,9 +38,10 @@ struct ContentView: View {
                 .navigationTitle("My Events")
                 .toolbar {
                     ToolbarItem(placement: .topBarLeading) {
-                        Button("Profile", systemImage: profileDoesNotWork ? "person.slash" : "person.circle" ) {
+                        Button("Profile", systemImage: profileDoesNotWork ? "person.slash" : "person.circle") {
                             if let decoded = Member.decode(from: memberData) {
                                 currentMember = decoded
+                                showProfileSheet = true // ✅ Show manually
                             } else {
                                 profileDoesNotWork.toggle()
                             }
@@ -45,59 +53,67 @@ struct ContentView: View {
                         }
                         .sheet(isPresented: $showAddMenu) {
                             AddEventMenuView { newEvent in
-                                var toAdd = newEvent
-                                if let currentMember = currentMember {
-                                    toAdd.members.append(currentMember)
-                                }
-                                events.append(toAdd)
-//                                if let soonest = events{
-//                                    .filter({ $0.eventDate > Date() })
-//                                    .sorted(by: { $0.eventDate < $1.eventDate })
-//                                    .first {
-//                                        
-//                                        TimerManager.shared.startTimer(duration: 10, event: soonest)
-//                                    }
-//                                }
-                                
-                                LocalEventStore().save(event: toAdd)
-                                saveEventRDB(toAdd) { result in
+                                saveEventRDB(newEvent) { result in
                                     if case let .failure(error) = result {
-                                        print("Failed to save to Firebase: \(error)")
+                                        print("❌ Failed to save to Firebase: \(error)")
+                                    } else {
+                                        print("✅ Event saved to Firebase.")
                                     }
                                 }
                             }
                         }
                     }
                 }
-                .sheet(item: $currentMember) { member in
-                    NavigationStack {
-                        ProfileView(member: Binding(
-                            get: { currentMember ?? member },
-                            set: { updated in
-                                currentMember = updated
-                                memberData = updated.encodeToData()
+                .sheet(isPresented: $showProfileSheet) { // ✅ Controlled manually
+                    if let currentMember {
+                        NavigationStack {
+                            ProfileView(member: Binding(
+                                get: { currentMember },
+                                set: { updated in
+                                    self.currentMember = updated
+                                    memberData = updated.encodeToData()
+                                }
+                            ))
+                            .navigationTitle("My Profile")
+                            .navigationBarTitleDisplayMode(.inline)
+                            .toolbar {
+                                ToolbarItem(placement: .confirmationAction) {
+                                    Button("Done") {
+                                        showProfileSheet = false
+                                    }
+                                }
                             }
-                        ))
+                        }
+                    } else {
+                        Text("No member loaded")
                     }
                 }
         }
         .onAppear {
             showOnboarding = !hasLaunchedBefore
 
+            if let data = memberData,
+               let decoded = try? JSONDecoder().decode(Member.self, from: data) {
+                currentMember = decoded // ✅ No longer opens sheet
+            } else {
+                print("⚠️ Failed to decode member data")
+                profileDoesNotWork = true
+            }
+
             observeEventsRDB { newEvents in
+                print("🔄 Events updated: \(newEvents.count) events received from Firebase.")
                 self.events = newEvents
-                LocalEventStore().save(events: newEvents)
             }
         }
         .sheet(isPresented: $showOnboarding) {
             OnboardingView { member in
                 memberData = member.encodeToData()
                 hasLaunchedBefore = true
+                currentMember = member
             }
         }
     }
 }
-
 
 struct EventsList: View {
     @Binding var events: [Event]
@@ -110,7 +126,7 @@ struct EventsList: View {
                         .padding()
                         .background(
                             RoundedRectangle(cornerRadius: 25, style: .continuous)
-                                .fill(Gradient(colors: [event.bgColor1.color, event.bgColor2.color]))
+                                .fill(event.colorGradient)
                         )
                         .overlay(
                             RoundedRectangle(cornerRadius: 25)

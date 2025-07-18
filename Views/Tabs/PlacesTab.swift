@@ -39,15 +39,21 @@ struct PlacesTab: View {
                 event.places.append(placeToAdd)
             }
             self.newPlace = nil  // Reset after adding
-//            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-//                event.saveToDatabase()
-//            }
+            event.saveToDatabase() { result in
+                if case let .failure(error) = result {
+                    print("Failed to save event: \(error.localizedDescription)")
+                }
+            }
         }
     }
 
     func movePlace(from source: IndexSet, to destination: Int) {
         event.places.move(fromOffsets: source, toOffset: destination)
-        event.saveToDatabase()
+        event.saveToDatabase() { result in
+            if case let .failure(error) = result {
+                print("Failed to save event: \(error.localizedDescription)")
+            }
+        }
     }
 }
 

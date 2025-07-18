@@ -42,7 +42,20 @@ struct PlansTab: View {
                         .padding()
                 }
                 .sheet(isPresented: $showingMapSheet) {
-                    MultiLocationView(locations: $event.plan.locations)
+                    NavigationView {
+                        MultiLocationView(locations: $event.plan.locations)
+                            .navigationTitle("Map")
+                            .navigationBarTitleDisplayMode(.inline)
+                            .toolbar {
+                                ToolbarItem(placement: .confirmationAction) {
+                                    Button("Done") {
+                                        showingMapSheet = false
+                                    }
+                                }
+                            }
+                    }
+                    .presentationDetents([.large]) // Full screen
+                    .presentationDragIndicator(.visible) // Optional: adds the drag bar at top
                 }
             }
             .sheet(isPresented: $presentAddLocSheet) {
@@ -53,6 +66,7 @@ struct PlansTab: View {
                         .font(.title)
                         .bold()
                         .fontDesign(.rounded)
+                        .padding(.horizontal)
                         .onTapGesture {
                             presentAddLocSheet = false
                         }

@@ -7,17 +7,20 @@
 
 import SwiftUI
 
-import SwiftUI
+import MapKit
+import CoreLocation
 
 struct MembersTab: View {
-    @Binding var members: [Member]
+    @Binding var event: Event
     @Binding var presentAddMemberSheet: Bool
     let inviteCode: String
     var body: some View {
         VStack {
-            List($members) { $member in
-                MemberRow(member: $member)
-                    .padding(.vertical, 4)
+            List {
+                ForEach(event.members.indices, id: \.self) { index in
+                    MemberRow(member: $event.members[index])
+                        .padding(.vertical, 4)
+                }
             }
             .listStyle(.insetGrouped)
         }
@@ -32,7 +35,7 @@ struct MembersTab: View {
 
 struct MemberRow: View {
     @Binding var member: Member
-    
+    @State var memberLocation: String = ""
     var body: some View {
         VStack(spacing: 30) {
             HStack(alignment: .top, spacing: 16) {
@@ -44,7 +47,7 @@ struct MemberRow: View {
                     Text(member.name)
                         .font(.headline)
                         .foregroundColor(.primary)
-                    
+                    Text(memberLocation)
 //                    HStack(spacing: 12) {
 //                        Label("\(event.membersNum)", systemImage: "person.3.fill")
 //                            .foregroundColor(.secondary)
@@ -59,6 +62,16 @@ struct MemberRow: View {
             }
             .padding(10)
             .cornerRadius(12)
+        }
+        .task(id: member.coordinate?.latitude) { // task re-runs when `member.id` changes
+            getReverseGeocode(coord: member.coordinate ?? CLLocationCoordinate2D(latitude: 0.0, longitude: 0.0)) { place in
+                memberLocation = place ?? "Unknown Location"
+            }
+        }
+        .onChange(of: member.coordinate?.longitude) {
+            getReverseGeocode(coord: member.coordinate ?? CLLocationCoordinate2D(latitude: 0.0, longitude: 0.0)) { place in
+                memberLocation = place ?? "Unknown Location"
+            }
         }
     }
     

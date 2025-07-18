@@ -2,35 +2,7 @@ import Foundation
 import SwiftUI
 import FirebaseDatabase
 
-class LocalEventStore {
-    private let key = "local_events"
 
-    func save(event: Event) {
-        var events = fetchEvents()
-        events.append(event)
-        if let data = try? JSONEncoder().encode(events) {
-            UserDefaults.standard.set(data, forKey: key)
-        }
-    }
-
-    func fetchEvents() -> [Event] {
-        guard let data = UserDefaults.standard.data(forKey: key),
-              let events = try? JSONDecoder().decode([Event].self, from: data) else {
-            return []
-        }
-        return events
-    }
-
-    func save(events: [Event]) {
-        if let data = try? JSONEncoder().encode(events) {
-            UserDefaults.standard.set(data, forKey: key)
-        }
-    }
-
-    func clear() {
-        UserDefaults.standard.removeObject(forKey: key)
-    }
-}
 
 struct AddEventMenuView: View {
     @Environment(\.dismiss) private var dismiss
@@ -138,48 +110,27 @@ struct CreateEventView: View {
         }
         
         let event = Event(
-            id: UUID().uuidString,
             title: title,
             emoji: emoji,
             members: [currentMember],
-            chats: [],
-            places: [],
-            plan: Plan(locations: []),
+            primaryColor: primaryColor,
+            secondaryColor: secondaryColor,
             eventDate: selectedDateTime,
-            bgColor1: CodableColor(color: primaryColor),
-            bgColor2: CodableColor(color: secondaryColor),
             inviteCode: inviteCode
         )
         
-        // Save locally no matter what
-        LocalEventStore().save(event: event)
         saveEventRDB(event) { result in
             DispatchQueue.main.async {
                 isSaving = false
                 switch result {
                 case .success:
                     onSuccess(event) // <- this ensures the event shows up in the list
-                    dismiss()
                 case .failure(let error):
                     print("Save failed: \(error)")
                     // show error toast
                 }
             }
         }
-
-//        // Then try cloud, if it fails, show a message
-//        repo.createEvent(event) { result in
-//            isSaving = false
-//            switch result {
-//            case .success:
-//                onSuccess(event)
-//                dismiss()
-//            case .failure(let error):
-//                errorMessage = "Saved locally. Could not upload: \(error.localizedDescription)"
-//                onSuccess(event) // Still proceed as if it's saved
-//                dismiss()
-//            }
-//        }
     }
 }
 struct JoinEventView: View {
@@ -236,7 +187,11 @@ struct JoinEventView: View {
 
             do {
                 let data = try JSONSerialization.data(withJSONObject: dict)
-                var event = try JSONDecoder().decode(Event.self, from: data)
+                let dateFormatter = DateFormatter()
+                dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssXXX"
+                let jsonDecoder = JSONDecoder()
+                jsonDecoder.dateDecodingStrategy = .formatted(dateFormatter)
+                var event = try jsonDecoder.decode(Event.self, from: data)
                 event.id = snap.key
 
                 if let memberData = UserDefaults.standard.data(forKey: "memberData"),
@@ -247,7 +202,7 @@ struct JoinEventView: View {
                         event.members.append(currentMember)
 
                         // Save updated event to Firebase
-                        let eventRef = ref.child(event.id ?? snap.key)
+                        let eventRef = ref.child(event.id)
                         let encodedData = try JSONEncoder().encode(event)
                         let dict = try JSONSerialization.jsonObject(with: encodedData) as? [String: Any] ?? [:]
 
@@ -258,14 +213,12 @@ struct JoinEventView: View {
                             } else {
                                 errorMessage = nil
                             }
-                            LocalEventStore().save(event: event)
                             onSuccess(event)
                         }
                     } else {
                         // Already a member
                         isJoining = false
                         errorMessage = nil
-                        LocalEventStore().save(event: event)
                         onSuccess(event)
                     }
 
@@ -286,3 +239,39 @@ struct JoinEventView: View {
     }
 
 }
+
+
+
+
+
+
+
+//class LocalEventStore {
+//    private let key = "local_events"
+//
+//    func save(event: Event) {
+//        var events = fetchEvents()
+//        events.append(event)
+//        if let data = try? JSONEncoder().encode(events) {
+//            UserDefaults.standard.set(data, forKey: key)
+//        }
+//    }
+//
+//    func fetchEvents() -> [Event] {
+//        guard let data = UserDefaults.standard.data(forKey: key),
+//              let events = try? JSONDecoder().decode([Event].self, from: data) else {
+//            return []
+//        }
+//        return events
+//    }
+//
+//    func save(events: [Event]) {
+//        if let data = try? JSONEncoder().encode(events) {
+//            UserDefaults.standard.set(data, forKey: key)
+//        }
+//    }
+//
+//    func clear() {
+//        UserDefaults.standard.removeObject(forKey: key)
+//    }
+//}

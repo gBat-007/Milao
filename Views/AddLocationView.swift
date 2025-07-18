@@ -156,27 +156,37 @@ struct AddLocationView: View {
         case ai = "AI Recommend"
     }
 
-    @State private var selectedMode: LocationAddMode = .search
+//    @State private var selectedMode: LocationAddMode = .search
 
     var body: some View {
         VStack{
-            Picker("Choose a method", selection: $selectedMode) {
-                ForEach(LocationAddMode.allCases, id: \.self) { mode in
-                    Text(mode.rawValue)
-                }
-            }
-            .pickerStyle(.segmented)
-            .padding()
-            if selectedMode == .search {
-//                SearchLocationView(places: $places, onSelect: { location in
-//                    // Add location to the plan
+//            Picker("Choose a method", selection: $selectedMode) {
+//                ForEach(LocationAddMode.allCases, id: \.self) { mode in
+//                    Text(mode.rawValue)
+//                        .font(.title)
+//                }
+//            }
+//            .pickerStyle(.segmented)
+//            .padding()
+//            if selectedMode == .search {
+//                SearchLocationView(event: $event, onSelect: { location in
+//                    event.plan.locations.append(Location(name: selectedMapItem.placemark.title, coordinate: Coordinate(latitude: selectedMapItem.placemark.coordinate.latitude, longitude: selectedMapItem.placemark.coordinate.longitude), ofPlace: <#T##Place#>))
+//                    event.saveToDatabase() { result in
+//                        if case let .failure(error) = result {
+//                            print("Failed to save event: \(error.localizedDescription)")
+//                        }
+//                    }
+//                    dismiss()
 //                })
-            } else {
                 AIRecommendationView(event: $event) { selectedLocation in
                     event.plan.locations.append(selectedLocation)
+                    event.saveToDatabase() { result in
+                        if case let .failure(error) = result {
+                            print("Failed to save event: \(error.localizedDescription)")
+                        }
+                    }
                     dismiss()
                 }
-            }
         }
     }
 }

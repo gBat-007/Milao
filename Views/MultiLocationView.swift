@@ -6,6 +6,7 @@
 //
 import SwiftUI
 import MapKit
+import GeoToolbox
 
 func regionThatFits(locations: [Location]) -> MKCoordinateRegion {
     guard !locations.isEmpty else {
@@ -36,6 +37,7 @@ func regionThatFits(locations: [Location]) -> MKCoordinateRegion {
 struct MultiLocationView: View {
     @Binding var locations: [Location]
     @State private var position: MapCameraPosition = .automatic // or use .region if you prefer
+    @State private var mapItems: [MKMapItem] = []
     //    @State private var region: MKCoordinateRegion
     
     //    init(locations: [Location]) {
@@ -55,29 +57,31 @@ struct MultiLocationView: View {
     
     var body: some View {
         Map(initialPosition: position) {
-            ForEach(locations) { location in
-                Annotation(location.name, coordinate: location.coordinate.clLocation) {
-                    VStack {
-                        Image(systemName: "mappin.circle.fill")
-                            .foregroundColor(.red)
-                            .font(.title)
-                        Text(location.name)
-                            .font(.caption)
-                            .padding(4)
-                            .background(Color.white.opacity(0.8))
-                            .cornerRadius(6)
-                    }
-                }
+            ForEach(mapItems, id:\.name) { itm in
+                Marker(item: itm)
+                    .mapItemDetailSelectionAccessory(.callout)
             }
         }
         .onAppear {
-            let newRegion = regionThatFits(locations: locations)
-            position = .region(newRegion)
+            Task {
+                await getMapItems(locations)
+                let newRegion = regionThatFits(locations: locations)
+                position = .region(newRegion)
+            }
         }
         .onChange(of: locations) {
             let newRegion = regionThatFits(locations: locations)
             position = .region(newRegion)
         }
         .ignoresSafeArea()
+    }
+    
+    func getMapItems(_: [Location]) async {
+        for location in locations {
+            let newItem = try? await location.request.mapItem
+            if let nwItem = newItem {
+                mapItems.append(nwItem)
+            }
+        }
     }
 }
