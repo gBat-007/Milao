@@ -1,0 +1,65 @@
+//
+//  TimeManager.swift
+//  Milao
+//
+//  Created by yash on 15/07/25.
+//
+import Foundation
+import ActivityKit
+
+struct TimerAttributes: ActivityAttributes {
+    public struct ContentState: Codable, Hashable {
+        var startTime: Date
+        var endTime: Date
+        var emoji: String
+        var title: String
+    }
+}
+
+struct WidgetEvent: Codable, Hashable {
+    let title: String
+    let emoji: String
+    let eventDate: Date
+}
+
+class TimerManager {
+    static let shared = TimerManager()
+    private var activity: Activity<TimerAttributes>?
+
+    func startSimpleTimer(to widgetEvent: WidgetEvent) {
+        let start = Date()
+        let end = widgetEvent.eventDate
+
+        let attributes = TimerAttributes()
+        let state = TimerAttributes.ContentState(
+            startTime: start,
+            endTime: end,
+            emoji: widgetEvent.emoji,
+            title: widgetEvent.title
+        )
+
+        do {
+            activity = try Activity<TimerAttributes>.request(attributes: attributes, contentState: state)
+            print("✅ Timer started until \(end)")
+//            scheduleAutoEnd(at: end)
+        } catch {
+            print("❌ Failed to start Live Activity: \(error)")
+        }
+    }
+
+    private func scheduleAutoEnd(at endTime: Date) {
+        let delay = endTime.timeIntervalSinceNow
+        guard delay > 0 else { return }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+            Task {
+                if let activity = self.activity {
+                    await activity.end(dismissalPolicy: .immediate)
+                    self.activity = nil
+                    print("🛑 Live Activity ended")
+                }
+            }
+        }
+    }
+}
+

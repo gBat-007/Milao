@@ -39,6 +39,9 @@ struct EventsView: View {
                 }
             }
             .navigationTitle($event.title)
+            .onChange(of: event.title) {
+                event.saveToDatabase()
+            }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {

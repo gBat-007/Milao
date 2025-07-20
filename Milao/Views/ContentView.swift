@@ -72,10 +72,10 @@ struct ContentView: View {
                     }
                 }
                 .sheet(isPresented: $showProfileSheet) { // ✅ Controlled manually
-                    if let currentMember {
+                    if let decoded = Member.decode(from: memberData) {
                         NavigationStack {
                             ProfileView(member: Binding(
-                                get: { currentMember },
+                                get: { decoded },
                                 set: { updated in
                                     self.currentMember = updated
                                     memberData = updated.encodeToData()
@@ -83,13 +83,13 @@ struct ContentView: View {
                             ))
                             .navigationTitle("My Profile")
                             .navigationBarTitleDisplayMode(.inline)
-                            .toolbar {
-                                ToolbarItem(placement: .confirmationAction) {
-                                    Button("Done") {
-                                        showProfileSheet = false
-                                    }
-                                }
-                            }
+//                            .toolbar {
+//                                ToolbarItem(placement: .confirmationAction) {
+//                                    Button("Done") {
+//                                        showProfileSheet = false
+//                                    }
+//                                }
+//                            }
                         }
                     } else {
                         Text("No member loaded")
