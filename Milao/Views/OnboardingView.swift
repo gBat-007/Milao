@@ -2,15 +2,6 @@ import SwiftUI
 import MapKit
 internal import Combine
 
-// MARK: - Delegate for MKLocalSearchCompleter
-class SearchCompleterDelegate: NSObject, MKLocalSearchCompleterDelegate, ObservableObject {
-    @Published var results: [MKLocalSearchCompletion] = []
-
-    func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
-        results = completer.results
-    }
-}
-
 struct OnboardingView: View {
     @State private var name = ""
     @State private var searchText = ""
