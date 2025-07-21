@@ -4,6 +4,19 @@ import FirebaseFirestore
 import FoundationModels
 import GeoToolbox
 
+struct Chat: Identifiable, Codable, Hashable {
+    var id: String = UUID().uuidString
+    var title: String
+    var emoji: String
+    var messages: [Message]
+}
+
+struct Message: Identifiable, Codable, Hashable {
+    var id: String = UUID().uuidString
+    let text: String
+    let isSentByMemberName: String
+}
+
 struct Coordinate: Hashable, Codable, Equatable {
     var latitude: Double
     var longitude: Double

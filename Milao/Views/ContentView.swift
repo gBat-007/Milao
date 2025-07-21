@@ -101,7 +101,7 @@ struct ContentView: View {
 
             if let data = memberData,
                let decoded = try? JSONDecoder().decode(Member.self, from: data) {
-                currentMember = decoded // ✅ No longer opens sheet
+                currentMember = decoded
             } else {
                 print("⚠️ Failed to decode member data")
                 profileDoesNotWork = true
@@ -110,6 +110,9 @@ struct ContentView: View {
             observeEventsRDB { newEvents in
                 print("🔄 Events updated: \(newEvents.count) events received from Firebase.")
                 self.events = newEvents
+
+                // ✅ Send events to Watch as WidgetEvent
+                PhoneSessionManager.shared.send(events: newEvents)
             }
         }
         .sheet(isPresented: $showOnboarding) {

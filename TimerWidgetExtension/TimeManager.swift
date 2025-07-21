@@ -16,10 +16,13 @@ struct TimerAttributes: ActivityAttributes {
     }
 }
 
-struct WidgetEvent: Codable, Hashable {
-    let title: String
-    let emoji: String
-    let eventDate: Date
+struct WidgetEvent: Codable, Hashable, Identifiable{
+    var id: String
+    var title: String
+    var emoji: String
+    var eventDate: Date
+    var memberCount: Int
+    var placesNum: Int
 }
 
 class TimerManager {

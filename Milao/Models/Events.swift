@@ -7,8 +7,6 @@
 import SwiftUI
 import Foundation
 import MapKit
-import FoundationModels
-import FirebaseFirestore
 import FirebaseDatabase
 import UIKit
 import CoreLocation
@@ -187,9 +185,12 @@ struct DeviceManager {
 extension Event {
     var asWidgetEvent: WidgetEvent {
         WidgetEvent(
+            id: self.id,
             title: self.title,
             emoji: self.emoji,
-            eventDate: self.eventDate
+            eventDate: self.eventDate,
+            memberCount: self.membersNum,
+            placesNum: self.placesNum
         )
     }
 }

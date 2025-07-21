@@ -9,19 +9,6 @@ import UIKit
 
 import Foundation
 
-struct Chat: Identifiable, Codable, Hashable {
-    var id: String = UUID().uuidString
-    var title: String
-    var emoji: String
-    var messages: [Message]
-}
-
-struct Message: Identifiable, Codable, Hashable {
-    var id: String = UUID().uuidString
-    let text: String
-    let isSentByMemberName: String
-}
-
 struct ChatsTab: View {
     @Binding var event: Event
     @Binding var presentAddChatSheet: Bool
