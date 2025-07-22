@@ -12,6 +12,7 @@
 
 import SwiftUI
 import ActivityKit
+import WatchConnectivity
 
 struct ContentView: View {
     @State private var events: [Event] = []
@@ -108,12 +109,20 @@ struct ContentView: View {
             }
 
             observeEventsRDB { newEvents in
-                print("🔄 Events updated: \(newEvents.count) events received from Firebase.")
+                print("🔄 Firebase gave \(newEvents.count) events")
+
                 self.events = newEvents
 
-                // ✅ Send events to Watch as WidgetEvent
-                PhoneSessionManager.shared.send(events: newEvents)
+                let widgets = newEvents.map { $0.asWidgetEvent }
+                WidgetEventStore.shared.widgetEvents = widgets
+
+                PhoneSessionManager.shared.send(widgetEvents: widgets)
             }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                print("🔗 Is Watch reachable? \(WCSession.default.isReachable)")
+            }
+            
         }
         .sheet(isPresented: $showOnboarding) {
             OnboardingView { member in

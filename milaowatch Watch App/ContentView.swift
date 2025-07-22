@@ -6,24 +6,13 @@ struct WatchContentView: View {
     var body: some View {
         NavigationStack {
             List(session.events) { event in
-                NavigationLink(destination: WatchEventDetailView(event: event)) {
-                    HStack {
-                        Text(event.emoji)
-                            .font(.title2)
-                        VStack(alignment: .leading) {
-                            Text(event.title)
-                                .font(.headline)
-                            Text(event.eventDate, style: .date)
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                }
+                Text(event.title) // basic, for now
             }
             .navigationTitle("Events")
         }
         .onAppear {
-            session.requestEvents()
+            print("👀 WatchContentView appeared — requesting events")
+            WatchSessionManager.shared.requestEvents()
         }
     }
 }
