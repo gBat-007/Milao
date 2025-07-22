@@ -7,10 +7,13 @@ struct WidgetEvent: Codable, Hashable, Identifiable{
     var eventDate: Date
     var memberCount: Int
     var placesNum: Int
+    var bgColor1: CodableColor
+    var bgColor2: CodableColor
+    
 }
 
 struct WatchEventDetailView: View {
-    @Binding var event: WidgetEvent
+    var event: WidgetEvent
 
     var body: some View {
         ScrollView {

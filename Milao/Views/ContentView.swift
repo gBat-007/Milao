@@ -58,7 +58,7 @@ struct ContentView: View {
                                     if case let .failure(error) = result {
                                         print("❌ Failed to save to Firebase: \(error)")
                                     } else {
-                                        if let soonest = events
+                                        if var soonest = events
                                             .filter({ $0.eventDate > Date() })
                                             .sorted(by: { $0.eventDate < $1.eventDate })
                                             .first {
@@ -81,7 +81,7 @@ struct ContentView: View {
                                     self.currentMember = updated
                                     memberData = updated.encodeToData()
                                 }
-                            ))
+                            ), events: $events)
                             .navigationTitle("My Profile")
                             .navigationBarTitleDisplayMode(.inline)
 //                            .toolbar {

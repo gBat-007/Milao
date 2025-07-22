@@ -11,7 +11,7 @@ import FirebaseDatabase
 import UIKit
 import CoreLocation
 
-struct Event: Identifiable, Codable {
+struct Event: Identifiable, Codable, Hashable, Equatable {
     var id: String
     var title: String
     var emoji: String
@@ -190,7 +190,9 @@ extension Event {
             emoji: self.emoji,
             eventDate: self.eventDate,
             memberCount: self.membersNum,
-            placesNum: self.placesNum
+            placesNum: self.placesNum,
+            bgColor1: self.bgColor1,
+            bgColor2: self.bgColor2
         )
     }
 }

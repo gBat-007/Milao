@@ -23,12 +23,24 @@ struct WidgetEvent: Codable, Hashable, Identifiable{
     var eventDate: Date
     var memberCount: Int
     var placesNum: Int
+    var bgColor1: CodableColor
+    var bgColor2: CodableColor
+    
 }
 
 class TimerManager {
     static let shared = TimerManager()
     private var activity: Activity<TimerAttributes>?
-
+    
+    func stopAllLiveActivities() {
+            Task {
+                for activity in Activity<TimerAttributes>.activities {
+                    await activity.end(dismissalPolicy: .immediate)
+                    print("🛑 Ended Live Activity: \(activity.id)")
+                }
+            }
+        }
+    
     func startSimpleTimer(to widgetEvent: WidgetEvent) {
         let start = Date()
         let end = widgetEvent.eventDate

@@ -2,7 +2,7 @@ import Foundation
 import CoreLocation
 import FirebaseFirestore
 
-struct Member: Codable, Identifiable, Equatable {
+struct Member: Codable, Identifiable, Equatable, Hashable {
     var id: String = UUID().uuidString
     var name: String
     var locationPlaceID: String

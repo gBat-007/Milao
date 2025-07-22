@@ -1,7 +1,7 @@
 import SwiftUI
 
 // Helper wrapper for decoding either a Double or a String that can convert to Double
-struct StringOrDouble: Codable {
+struct StringOrDouble: Codable, Hashable {
     let value: Double
 
     init(from decoder: Decoder) throws {
@@ -25,7 +25,7 @@ struct StringOrDouble: Codable {
 }
 
 
-struct CodableColor: Codable, Equatable {
+struct CodableColor: Codable, Equatable, Hashable {
     let color: Color
 
     init(color: Color) {

@@ -6,17 +6,21 @@ import CoreLocation
 struct ProfileView: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var member: Member
+    @Binding var events: [Event]
 
     @State private var tempName: String
     @State private var tempLocation: String
     @State private var coordinate: CLLocationCoordinate2D?
+    @State private var selectedEventID: String?
+    @State private var showEventPicker: Bool = false
 
     @StateObject private var completerDelegate = SearchCompleterDelegate()
     private let searchCompleter = MKLocalSearchCompleter()
     private let geocoder = CLGeocoder()
 
-    init(member: Binding<Member>) {
+    init(member: Binding<Member>, events: Binding<[Event]>) {
         _member = member
+        _events = events
         _tempName = State(initialValue: member.wrappedValue.name)
         _tempLocation = State(initialValue: "")
         _coordinate = State(initialValue: member.wrappedValue.coordinate)
@@ -68,6 +72,57 @@ struct ProfileView: View {
                             .foregroundColor(.gray)
                     }
                 }
+                
+                Section("Live Activities") {
+                    // 1. Create a sorted list of upcoming events
+                    let upcomingEvents = events
+                        .filter { $0.eventDate > Date() }
+                        .sorted(by: { $0.eventDate < $1.eventDate })
+
+                    // 2. Picker to select an event by title
+                    Picker("Choose Event", selection: $selectedEventID) {
+                        ForEach(events.filter { $0.eventDate > Date() }) { event in
+                            Text(event.title).tag(event.id)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .onChange(of: selectedEventID) { newValue in
+                        print("🔍 Picker selection changed. New selectedEventID: \(newValue ?? "nil")")
+                    }
+
+                    // 3. Start Button - triggers Live Activity for selected event
+                    Button("Start Live Activity") {
+                        print("🚀 Start button tapped.")
+
+                        guard let id = selectedEventID else {
+                            print("❌ selectedEventID is nil.")
+                            return
+                        }
+
+                        guard let event = events.first(where: { $0.id == id }) else {
+                            print("❌ Could not find event with id: \(id)")
+                            return
+                        }
+
+                        print("✅ Found event: \(event.title) with ID: \(event.id)")
+                            
+                        Task {
+                        
+                            print("🟢 Starting new live activity for event: \(event.title)")
+                            await TimerManager.shared.startSimpleTimer(to: event.asWidgetEvent)
+                        }
+                    }
+                    .disabled(selectedEventID == nil)
+
+                    // 4. Stop Button - stops all Live Activities
+                    Button("Stop All Live Activities") {
+                        Task {
+                            await TimerManager.shared.stopAllLiveActivities()
+                        }
+                    }
+                    .tint(.red)
+                }
+                
             }
             .navigationTitle("Profile")
             .toolbar {
