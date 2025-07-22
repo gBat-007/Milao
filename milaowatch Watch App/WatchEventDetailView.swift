@@ -10,7 +10,7 @@ struct WidgetEvent: Codable, Hashable, Identifiable{
 }
 
 struct WatchEventDetailView: View {
-    let event: WidgetEvent
+    @Binding var event: WidgetEvent
 
     var body: some View {
         ScrollView {

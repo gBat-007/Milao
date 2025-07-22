@@ -1,6 +1,7 @@
 import SwiftUI
 import MapKit
 struct EventsView: View {
+    @Environment(\.colorScheme) var colorScheme
     @Binding var event: Event
     @State private var selectedTab = 0
 
@@ -17,28 +18,25 @@ struct EventsView: View {
                     MembersTab(event: $event,
                                presentAddMemberSheet: $presentAddMemberSheet,
                                inviteCode: event.inviteCode)
-                    .tint(event.bgColor2.color)
+                    .tint(event.bgColor2.resolved(for: colorScheme))
                 }
 
                 Tab("Locations", systemImage: "mappin.and.ellipse", value: 1) {
                     PlacesTab(event: $event,
                               presentAddPlaceSheet: $presentAddPlaceSheet)
-                    .tint(event.bgColor2.color)
-
+                    .tint(event.bgColor2.resolved(for: colorScheme))
                 }
 
                 Tab("Plan", systemImage: "map", value: 2) {
                     PlansTab(event: $event,
                              presentAddLocSheet: $presentAddPlanSheet)
-                    .tint(event.bgColor2.color)
-
+                    .tint(event.bgColor2.resolved(for: colorScheme))
                 }
 
                 Tab("Chats", systemImage: "message", value: 3) {
                     ChatsTab(event: $event,
                              presentAddChatSheet: $presentAddChatSheet)
-                    .tint(event.bgColor2.color)
-
+                    .tint(event.bgColor2.resolved(for: colorScheme))
                 }
 
                 Tab("Settings", systemImage: "gear", value: 4) {
@@ -83,6 +81,6 @@ struct EventsView: View {
                 }
             }
         }
-        .tint(event.bgColor1.color)
+        .tint(event.bgColor1.resolved(for: colorScheme))
     }
 }
