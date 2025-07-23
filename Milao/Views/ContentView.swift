@@ -14,6 +14,7 @@ import SwiftUI
 import ActivityKit
 import WatchConnectivity
 import UIKit
+import AlarmKit
 
 struct ContentView: View {
     @State private var events: [Event] = []
@@ -55,6 +56,15 @@ struct ContentView: View {
                         }
                         .sheet(isPresented: $showAddMenu) {
                             AddEventMenuView { newEvent in
+                                Task {
+                                    let granted = try await AlarmManager.shared.requestAuthorization()
+                                    if granted == .authorized {
+                                                        print("✅ Alarm permission granted.")
+                                                    } else {
+                                                        print("❌ Alarm permission denied.")
+                                                    }
+                                    await scheduleAlarm(for: newEvent)
+                                }
                                 saveEventRDB(newEvent) { result in
                                     if case let .failure(error) = result {
                                         print("❌ Failed to save to Firebase: \(error)")
@@ -100,6 +110,10 @@ struct ContentView: View {
         }
         .onAppear {
             showOnboarding = !hasLaunchedBefore
+            
+            let widgets = events.map { $0.asWidgetEvent }
+            WidgetEventStore.shared.widgetEvents = widgets
+            PhoneSessionManager.shared.send(widgetEvents: widgets)
 
             if let data = memberData,
                let decoded = try? JSONDecoder().decode(Member.self, from: data) {

@@ -121,20 +121,17 @@ struct AllSettingsView: View {
                         }
 
                         print("✅ Found event: \(event.title) with ID: \(event.id)")
-                            
-                        Task {
-                        
-                            print("🟢 Starting new live activity for event: \(event.title)")
-                            await TimerManager.shared.startSimpleTimer(to: event.asWidgetEvent)
+                            TimerManager.shared.stopAllLiveActivities()
+                            print("🟢 Starting new live activity for event: \(event.id)")
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            TimerManager.shared.startSimpleTimer(to: event.asWidgetEvent)
                         }
                     }
                     .disabled(selectedEventID == nil)
 
                     // 4. Stop Button - stops all Live Activities
                     Button("Stop All Live Activities") {
-                        Task {
-                            await TimerManager.shared.stopAllLiveActivities()
-                        }
+                            TimerManager.shared.stopAllLiveActivities()
                     }
                     .tint(.red)
                 }

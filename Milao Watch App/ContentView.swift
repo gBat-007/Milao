@@ -20,28 +20,34 @@ struct WatchContentView: View {
 
     var body: some View {
         NavigationStack {
-            List(session.events) { event in
-                NavigationLink(destination: WatchEventDetailView(event: event)) {
-                    WatchEventRow(event: event)
-                        .padding(5)
-                        .background(
-                            RoundedRectangle(cornerRadius: 5, style: .continuous)
-                                .fill(LinearGradient(
-                                    colors: [event.bgColor1.color, event.bgColor2.color],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ))
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 25)
-                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                        )
-                        .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 5)
-                        .blur(radius: 0.3) // small blur for softness
-                        .padding(.vertical, 2)
+            VStack {
+                Button("Refresh Events") {
+                    WatchSessionManager.shared.requestEvents()
                 }
+                List(session.events) { event in
+                    NavigationLink(destination: WatchEventDetailView(event: event)) {
+                        WatchEventRow(event: event)
+                            .padding(5)
+                            .background(
+                                RoundedRectangle(cornerRadius: 5, style: .continuous)
+                                    .fill(LinearGradient(
+                                        colors: [event.bgColor1.color, event.bgColor2.color],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    ))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 25)
+                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                            )
+                            .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 5)
+                            .blur(radius: 0.3) // small blur for softness
+                            .padding(.vertical, 2)
+                    }
+                }
+                .navigationTitle("Events")
+                
             }
-            .navigationTitle("Events")
         }
         .onAppear {
             print("👀 WatchContentView appeared — requesting events")

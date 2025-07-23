@@ -10,6 +10,7 @@ import MapKit
 import FirebaseDatabase
 import UIKit
 import CoreLocation
+import AlarmKit
 
 struct Event: Identifiable, Codable, Hashable, Equatable {
     var id: String
