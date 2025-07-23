@@ -107,6 +107,16 @@ struct Event: Identifiable, Codable, Hashable, Equatable {
 
 
 extension Event {
+    func deleteFromDatabase(completion: ((Result<Void, Error>) -> Void)? = nil) {
+            let ref = Database.database().reference().child("events").child(self.id)
+            ref.removeValue { error, _ in
+                if let error = error {
+                    completion?(.failure(error))
+                } else {
+                    completion?(.success(()))
+                }
+            }
+        }
         func saveToDatabase(completion: ((Result<Void, Error>) -> Void)? = nil) {
             var eventToSave = self
 

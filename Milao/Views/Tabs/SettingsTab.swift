@@ -23,12 +23,12 @@ struct SettingsTab: View {
             }
 
             Section(header: Text("Event Info")) {
-                HStack {
-                    Text("Emoji")
-                    Spacer()
-                    TextField("😊", text: $event.emoji)
-                        .multilineTextAlignment(.trailing)
-                        .frame(width: 50)
+                HStack{
+                    Text("Emoji ")
+                        .fontDesign(.rounded)
+                    EmojiKeyboardButton(emoji: $event.emoji)
+                        .frame(width: 50, height: 50)
+                        .overlay(RoundedRectangle(cornerRadius: 45).stroke(Color.gray.opacity(0.4)).blur(radius: 20.0))
                 }
                 .onChange(of: event.emoji) {
                     event.saveToDatabase()

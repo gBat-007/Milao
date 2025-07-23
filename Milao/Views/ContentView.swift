@@ -13,6 +13,7 @@
 import SwiftUI
 import ActivityKit
 import WatchConnectivity
+import UIKit
 
 struct ContentView: View {
     @State private var events: [Event] = []
@@ -39,7 +40,7 @@ struct ContentView: View {
                 .navigationTitle("My Events")
                 .toolbar {
                     ToolbarItem(placement: .topBarLeading) {
-                        Button("Profile", systemImage: profileDoesNotWork ? "person.slash" : "person.circle") {
+                        Button("Settings", systemImage: "gear") {
                             if let decoded = Member.decode(from: memberData) {
                                 currentMember = decoded
                                 showProfileSheet = true // ✅ Show manually
@@ -58,13 +59,13 @@ struct ContentView: View {
                                     if case let .failure(error) = result {
                                         print("❌ Failed to save to Firebase: \(error)")
                                     } else {
-                                        if var soonest = events
-                                            .filter({ $0.eventDate > Date() })
-                                            .sorted(by: { $0.eventDate < $1.eventDate })
-                                            .first {
-                                            
-                                            TimerManager.shared.startSimpleTimer(to: soonest.asWidgetEvent)
-                                        }
+//                                        if var soonest = events
+//                                            .filter({ $0.eventDate > Date() })
+//                                            .sorted(by: { $0.eventDate < $1.eventDate })
+//                                            .first {
+//                                            
+//                                            TimerManager.shared.startSimpleTimer(to: soonest.asWidgetEvent)
+//                                        }
                                         print("✅ Event saved to Firebase.")
                                     }
                                 }
@@ -75,7 +76,7 @@ struct ContentView: View {
                 .sheet(isPresented: $showProfileSheet) { // ✅ Controlled manually
                     if let decoded = Member.decode(from: memberData) {
                         NavigationStack {
-                            ProfileView(member: Binding(
+                            AllSettingsView(member: Binding(
                                 get: { decoded },
                                 set: { updated in
                                     self.currentMember = updated
@@ -136,13 +137,20 @@ struct ContentView: View {
 
 struct EventsList: View {
     @Binding var events: [Event]
-    
+    @State private var showDeleteConfirmation = false
+    @State private var eventToDeleteIndex: Int?
+
     var body: some View {
         List {
-            ForEach($events) { $event in
-                NavigationLink(destination: EventsView(event: $event)) {
-                    EventRow(event: $event)
-                        .padding()
+            ForEach(Array(events.enumerated()), id: \.element.id) { index, event in
+                let eventBinding = Binding(
+                    get: { events[index] },
+                    set: { events[index] = $0 }
+                )
+
+                NavigationLink(destination: EventsView(event: eventBinding)) {
+                    EventRow(event: eventBinding)
+                        .padding(5)
                         .background(
                             RoundedRectangle(cornerRadius: 25, style: .continuous)
                                 .fill(event.colorGradient)
@@ -152,22 +160,50 @@ struct EventsList: View {
                                 .stroke(Color.white.opacity(0.2), lineWidth: 1)
                         )
                         .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 5)
-                        .blur(radius: 0.3) // small blur for softness
-                        .padding(.vertical, 6)
+                        .blur(radius: 0.3)
+//                        .padding(.vertical, 6)
+                }
+                .swipeActions {
+                    Button(role: .destructive) {
+                        eventToDeleteIndex = index
+                        showDeleteConfirmation = true
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
                 }
                 .listRowSeparator(.hidden)
                 .listRowBackground(Color.clear)
             }
         }
         .listStyle(.plain)
+        .confirmationDialog(
+            "Are you sure you want to delete \"\(eventToDeleteIndex.map { events[$0].title } ?? "")\"?",
+            isPresented: $showDeleteConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Delete", role: .destructive) {
+                if let index = eventToDeleteIndex {
+                    let event = events[index]
+                    event.deleteFromDatabase { _ in }
+                    events.remove(at: index)
+                    eventToDeleteIndex = nil
+                }
+            }
+            Button("Cancel", role: .cancel) {
+                eventToDeleteIndex = nil
+            }
+        }
     }
 }
+
 
 
 struct EventRow: View {
     @Binding var event: Event
     @State var textColor: Color = .black
     @State var subTextColor: Color = .gray
+    @State var showOwnerPopover: Bool = false
+    @State var showOwnerAlert: Bool = false
     var body: some View {
         VStack(spacing: 30) {
             HStack(alignment: .top, spacing: 16) {
@@ -176,9 +212,40 @@ struct EventRow: View {
                     .padding(.top, 4)
                 
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(event.title)
-                        .font(.headline)
-                        .foregroundColor(textColor)
+                    HStack {
+                        Text(event.title)
+                            .font(.headline)
+                            .foregroundColor(textColor)
+                        if event.ownerID == UIDevice.current.identifierForVendor?.uuidString {
+                            Image(systemName: "crown.fill")
+                                .foregroundColor(textColor)
+                                .onTapGesture {
+                                            #if os(iOS)
+                                            if UIDevice.current.userInterfaceIdiom == .pad {
+                                                showOwnerPopover = true
+                                            } else {
+                                                withAnimation {
+                                                    showOwnerAlert.toggle()
+                                                }
+                                            }
+                                            #else
+                                            showOwnerPopover = true
+                                            #endif
+                                }
+                                .popover(isPresented: $showOwnerPopover) {
+                                        Text("You are the owner of this event.")
+                                            .padding()
+                                            .frame(width: 200)
+                                }
+                                .alert("Owner", isPresented: $showOwnerAlert) {
+                                    Button("OK", role: .cancel) { }
+                                } message: {
+                                    Text("You're the owner of \(event.title).")
+                                }
+                                .tint(Color("bgSwitch"))
+                        }
+                    }
+                    
                     
                     Text(event.eventDate.formatted(.dateTime.weekday().month().day().year()))
                             .font(.subheadline)

@@ -1,4 +1,3 @@
-import SwiftUI
 import UIKit
 //
 //  Events.swift
@@ -6,8 +5,8 @@ import UIKit
 //
 //  Created by Gautam Bansal on 09/07/25.
 //
-
 import Foundation
+import SwiftUI
 
 struct ChatsTab: View {
     @Binding var event: Event
@@ -15,12 +14,14 @@ struct ChatsTab: View {
     @AppStorage("memberData") var memberData: Data?
     @State var currentMemberName: String = ""
     @State var newMessage: String = ""
+    @State private var showGeneralAlert = false
+    @Environment(\.colorScheme) var colorScheme
     var body: some View {
         VStack {
             List {
-                ForEach($event.chats) { $chat in
-                    NavigationStack{
-                        NavigationLink(destination: ChatsView(chat: $chat, thisMember: currentMemberName, newMessage: $newMessage)) {
+                ForEach(Array(event.chats.enumerated()), id: \.element.id) { index, chat in
+                    NavigationStack {
+                        NavigationLink(destination: ChatsView(chat: $event.chats[index], thisMember: currentMemberName, newMessage: $newMessage)) {
                             HStack {
                                 Text(chat.emoji)
                                     .font(.largeTitle)
@@ -34,18 +35,22 @@ struct ChatsTab: View {
                             }
                             .padding(.vertical, 4)
                         }
-                        
                     }
                 }
+                .onDelete(perform: deleteChat)
             }
             .onAppear {
                 currentMemberName = Member.decode(from: memberData)?.name ?? "Unknown Name"
             }
-            .onChange(of: newMessage){
+            .onChange(of: newMessage) {
                 event.saveToDatabase()
             }
             .listStyle(.insetGrouped)
         }
+        .alert("The \"General\" chat cannot be deleted.", isPresented: $showGeneralAlert) {
+            Button("OK", role: .cancel) {}
+        }
+        .tint(Color("bgSwitch"))
         .sheet(isPresented: $presentAddChatSheet) {
             AddChatView { newChat in
                 event.chats.append(newChat)
@@ -53,14 +58,28 @@ struct ChatsTab: View {
             .presentationDetents([.medium])
         }
     }
+    
+    private func deleteChat(at offsets: IndexSet) {
+        for index in offsets {
+                    let chat = event.chats[index]
+                    if chat.title == "General" {
+                        showGeneralAlert = true
+                        return
+                    }
+                    event.chats.remove(at: index)
+                }
+
+            event.saveToDatabase()
+    }
 }
+
 
 struct AddChatView: View {
     @Environment(\.dismiss) var dismiss
 
     @State private var title = ""
     @State private var emoji = "💬"
-    @State private var membersNum = 1
+//    @State private var membersNum = 1
 
     var onAdd: (Chat) -> Void
 
@@ -72,11 +91,11 @@ struct AddChatView: View {
                     HStack{
                         Text("Emoji ")
                             .fontDesign(.rounded)
-                        EmojiTextField(text: $emoji)
-                            .frame(width: 60, height: 40)
-                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.gray.opacity(0.4)))
+                        EmojiKeyboardButton(emoji: $emoji)
+                            .frame(width: 50, height: 50)
+                            .overlay(RoundedRectangle(cornerRadius: 45).stroke(Color.gray.opacity(0.4)).blur(radius: 20.0))
                     }
-                    Stepper("Members: \(membersNum)", value: $membersNum, in: 1...100)
+//                    Stepper("Members: \(membersNum)", value: $membersNum, in: 1...100)
                 }
             }
             .navigationTitle("New Chat")

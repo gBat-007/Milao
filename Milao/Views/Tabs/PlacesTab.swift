@@ -1,7 +1,6 @@
 
 import SwiftUI
 
-
 struct PlacesTab: View {
     @Binding var event: Event
     @Binding var presentAddPlaceSheet: Bool
@@ -10,16 +9,17 @@ struct PlacesTab: View {
     var body: some View {
         VStack {
             List {
-              Section {
-                ForEach(Array(event.places.enumerated()), id: \.element.id) { index, _ in
-                  HStack {
-                    Image(systemName: "line.3.horizontal")
-                      .foregroundColor(.gray)
-                    PlaceRow(place: $event.places[index])
-                  }
+                Section {
+                    ForEach(Array(event.places.enumerated()), id: \.element.id) { index, _ in
+                        HStack {
+                            Image(systemName: "line.3.horizontal")
+                                .foregroundColor(.gray)
+                            PlaceRow(place: $event.places[index])
+                        }
+                    }
+                    .onMove(perform: movePlace)
+                    .onDelete(perform: deletePlace) // <-- added delete handler
                 }
-                .onMove(perform: movePlace)
-              }
             }
             .listStyle(.insetGrouped)
         }
@@ -38,8 +38,8 @@ struct PlacesTab: View {
             withAnimation {
                 event.places.append(placeToAdd)
             }
-            self.newPlace = nil  // Reset after adding
-            event.saveToDatabase() { result in
+            self.newPlace = nil
+            event.saveToDatabase { result in
                 if case let .failure(error) = result {
                     print("Failed to save event: \(error.localizedDescription)")
                 }
@@ -49,13 +49,23 @@ struct PlacesTab: View {
 
     func movePlace(from source: IndexSet, to destination: Int) {
         event.places.move(fromOffsets: source, toOffset: destination)
-        event.saveToDatabase() { result in
+        save()
+    }
+
+    func deletePlace(at offsets: IndexSet) {
+        event.places.remove(atOffsets: offsets)
+        save()
+    }
+
+    private func save() {
+        event.saveToDatabase { result in
             if case let .failure(error) = result {
                 print("Failed to save event: \(error.localizedDescription)")
             }
         }
     }
 }
+
 
 
 

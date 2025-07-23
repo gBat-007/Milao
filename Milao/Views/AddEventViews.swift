@@ -42,7 +42,7 @@ struct CreateEventView: View {
     @State private var title = ""
     @State private var primaryColor = Color.accentColor
     @State private var secondaryColor = Color.gray
-    @State private var emoji = ""
+    @State private var emoji = "😃"
     @State private var selectedDateTime: Date = Date()
     @State private var inviteCode = Event.generateInviteCode()
     @State private var isSaving = false
@@ -66,9 +66,9 @@ struct CreateEventView: View {
                 HStack{
                     Text("Emoji ")
                         .fontDesign(.rounded)
-                    EmojiTextField(text: $emoji)
-                        .frame(width: 60, height: 40)
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.gray.opacity(0.4)))
+                    EmojiKeyboardButton(emoji: $emoji)
+                        .frame(width: 50, height: 50)
+                        .overlay(RoundedRectangle(cornerRadius: 45).stroke(Color.gray.opacity(0.4)).blur(radius: 20.0))
                 }
                 
                 DatePicker("Event Date & Start Time", selection: $selectedDateTime, in: dateRange, displayedComponents: [.date, .hourAndMinute])

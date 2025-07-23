@@ -3,7 +3,7 @@ import MapKit
 import Contacts
 import CoreLocation
 
-struct ProfileView: View {
+struct AllSettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var member: Member
     @Binding var events: [Event]
@@ -124,7 +124,7 @@ struct ProfileView: View {
                 }
                 
             }
-            .navigationTitle("Profile")
+            .navigationTitle("Settings")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
