@@ -5,7 +5,7 @@ struct PlacesTab: View {
     @Binding var event: Event
     @Binding var presentAddPlaceSheet: Bool
     @State private var newPlace: Place?
-
+    @State private var showingMapSheet = false
     var body: some View {
         VStack {
             List {
@@ -22,9 +22,39 @@ struct PlacesTab: View {
                 }
             }
             .listStyle(.insetGrouped)
+            Spacer()
+            HStack{
+                Spacer()
+                Button {
+                        showingMapSheet = true
+                    } label: {
+                        Image(systemName: "map")
+                            .padding(10)
+                            .background(.thinMaterial)
+                            .clipShape(Circle())
+                            .shadow(radius: 3)
+                    }
+                    .padding()
+            }
+            .sheet(isPresented: $showingMapSheet) {
+                NavigationView {
+                    MultiLocationView(places: $event.places)
+                        .navigationTitle("Map")
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar {
+                            ToolbarItem(placement: .confirmationAction) {
+                                Button("Done") {
+                                    showingMapSheet = false
+                                }
+                            }
+                        }
+                }
+                .presentationDetents([.large]) // Full screen
+                .presentationDragIndicator(.visible) // Optional: adds the drag bar at top
+            }
         }
         .sheet(isPresented: $presentAddPlaceSheet) {
-            AddPlaceView(draftPlace: $newPlace, color1: $event.bgColor1, color2: $event.bgColor2)
+            AddPlaceView(draftPlace: $newPlace, color1: $event.bgColor1, color2: $event.bgColor2, previousPlace: event.places.last)
                 .presentationDetents([.fraction(0.7)])
         }
         .onChange(of: newPlace) {
@@ -33,7 +63,8 @@ struct PlacesTab: View {
                 id: UUID().uuidString,
                 name: newPlace.name,
                 descriptionAI: newPlace.descriptionAI,
-                emoji: newPlace.emoji
+                emoji: newPlace.emoji,
+                location: Location(id: UUID().uuidString, name: "A Location", coordinate: Coordinate(latitude: 0.0, longitude: 0.0))
             )
             withAnimation {
                 event.places.append(placeToAdd)

@@ -21,25 +21,25 @@ struct EventsView: View {
                     .tint(event.bgColor2.resolved(for: colorScheme))
                 }
 
-                Tab("Locations", systemImage: "mappin.and.ellipse", value: 1) {
+                Tab("Plan", systemImage: "map", value: 1) {
                     PlacesTab(event: $event,
                               presentAddPlaceSheet: $presentAddPlaceSheet)
                     .tint(event.bgColor2.resolved(for: colorScheme))
                 }
 
-                Tab("Plan", systemImage: "map", value: 2) {
-                    PlansTab(event: $event,
-                             presentAddLocSheet: $presentAddPlanSheet)
-                    .tint(event.bgColor2.resolved(for: colorScheme))
-                }
+//                Tab("Plan", systemImage: "map", value: 2) {
+//                    PlansTab(event: $event,
+//                             presentAddLocSheet: $presentAddPlanSheet)
+//                    .tint(event.bgColor2.resolved(for: colorScheme))
+//                }
 
-                Tab("Chats", systemImage: "message", value: 3) {
+                Tab("Chats", systemImage: "message", value: 2) {
                     ChatsTab(event: $event,
                              presentAddChatSheet: $presentAddChatSheet)
                     .tint(event.bgColor2.resolved(for: colorScheme))
                 }
 
-                Tab("Settings", systemImage: "gear", value: 4) {
+                Tab("Settings", systemImage: "gear", value: 3) {
                     SettingsTab(event: $event)
                 }
             }
@@ -64,12 +64,6 @@ struct EventsView: View {
                             Label("Add Place", systemImage: "plus")
                         }
                     case 2:
-                        Button {
-                            presentAddPlanSheet = true
-                        } label: {
-                            Label("Add Plan", systemImage: "plus")
-                        }
-                    case 3:
                         Button {
                             presentAddChatSheet = true
                         } label: {

@@ -31,7 +31,6 @@ struct Location: Identifiable, Codable, Equatable, Hashable{
     var id: String? = UUID().uuidString
     var name: String
     var coordinate: Coordinate
-    var ofPlace: Place
 }
 
 extension Location {
@@ -45,15 +44,15 @@ extension Location {
     }
 }
 
-struct Plan: Identifiable, Codable, Equatable, Hashable{
-    var id: String? = UUID().uuidString
-    var locations: [Location]
-}
+//struct Plan: Identifiable, Codable, Equatable, Hashable{
+//    var id: String? = UUID().uuidString
+//    var locations: [Location]
+//}
 
-@Generable
 struct Place: Identifiable, Equatable, Codable, Hashable{
     var id: String? = UUID().uuidString
     var name: String
     var descriptionAI: String
     var emoji: String
+    var location: Location
 }

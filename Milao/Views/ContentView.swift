@@ -164,11 +164,13 @@ struct EventsList: View {
 //                        .padding(.vertical, 6)
                 }
                 .swipeActions {
-                    Button(role: .destructive) {
-                        eventToDeleteIndex = index
-                        showDeleteConfirmation = true
-                    } label: {
-                        Label("Delete", systemImage: "trash")
+                    if event.ownerID == UIDevice.current.identifierForVendor?.uuidString {
+                        Button(role: .destructive) {
+                            eventToDeleteIndex = index
+                            showDeleteConfirmation = true
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
                     }
                 }
                 .listRowSeparator(.hidden)

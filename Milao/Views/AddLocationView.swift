@@ -5,16 +5,19 @@ import FoundationModels
 
 
 struct AddLocationView: View {
-    @Binding var event: Event
-    @Environment(\.dismiss) private var dismiss
+    var placeType: String
+    var placeDesc: String
+    var previousPlace: Place?
+    let onComplete: (Location) -> Void
+
     enum LocationAddMode: String, CaseIterable {
         case search = "Search"
         case ai = "AI Recommend"
     }
 
     @State private var selectedMode: LocationAddMode = .search
-    @State private var closeTo: Coordinate = .init(latitude: 0.0, longitude: 0.0)
     @State private var isCoordinateReady: Bool = false
+    @State private var closeTo: Coordinate = .init(latitude: 0.0, longitude: 0.0)
     @AppStorage("memberData") private var memberData: Data?
     
     var body: some View {
@@ -30,23 +33,19 @@ struct AddLocationView: View {
             if isCoordinateReady {
                 if selectedMode == .search {
                     SearchLocationView(near: closeTo.clLocation) { mapItem in
-                        event.plan.locations.append(Location(name: mapItem.name ?? "Unknown Name", coordinate: Coordinate(latitude: mapItem.location.coordinate.latitude, longitude: mapItem.location.coordinate.longitude), ofPlace: event.places[event.plan.locations.count]))
-                        event.saveToDatabase() { result in
-                            if case let .failure(error) = result {
-                                print("Failed to save event: \(error.localizedDescription)")
-                            }
-                        }
-                        dismiss()
+                        onComplete(
+                            Location(
+                                name: mapItem.name ?? "Unknown Name",
+                                coordinate: Coordinate(
+                                    latitude: mapItem.location.coordinate.latitude,
+                                    longitude: mapItem.location.coordinate.longitude
+                                )
+                            )
+                        )
                     }
                 } else {
-                        AIRecommendationView(event: $event) { selectedLocation in
-                            event.plan.locations.append(selectedLocation)
-                            event.saveToDatabase() { result in
-                                if case let .failure(error) = result {
-                                    print("Failed to save event: \(error.localizedDescription)")
-                                }
-                            }
-                            dismiss()
+                        AIRecommendationView(placeType: placeType, placeDesc: placeDesc) { selectedLocation in
+                            onComplete(selectedLocation)
                         }
                     }
             }
@@ -54,14 +53,11 @@ struct AddLocationView: View {
                 
         }
         .onAppear {
-            if event.plan.locations.count == 0 && event.places.count > 0 {
-                if let decoded = Member.decode(from: memberData) {
-                    closeTo = Coordinate(latitude: decoded.coordinate?.latitude ?? 0.0, longitude: decoded.coordinate?.longitude ?? 0.0)
-                }
-            } else if event.places.count > event.plan.locations.count {
-                if let latestLoc = event.plan.locations.last {
-                    closeTo = latestLoc.coordinate
-                }
+            if let prevPlace = previousPlace {
+                closeTo = prevPlace.location.coordinate
+            } else {
+                let member = Member.decode(from: memberData)
+                closeTo = Coordinate(latitude: member?.coordinate?.latitude ?? 0.0, longitude: member?.coordinate?.longitude ?? 0.0)
             }
             
             // Delay slightly to ensure UI updates

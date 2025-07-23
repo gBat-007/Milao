@@ -18,7 +18,6 @@ struct Event: Identifiable, Codable, Hashable, Equatable {
     var members: [Member]
     var chats: [Chat]
     var places: [Place]
-    var plan: Plan
     var eventDate: Date
     var bgColor1: CodableColor
     var bgColor2: CodableColor
@@ -60,7 +59,6 @@ struct Event: Identifiable, Codable, Hashable, Equatable {
         self.members = members
         self.chats = [Chat(title: "General", emoji: "💬", messages: [Message(text: "Welcome to the general chat.", isSentByMemberName: "Admin")])]
         self.places = []
-        self.plan = Plan(locations: [])
         self.eventDate = eventDate
         self.bgColor1 = CodableColor(color: primaryColor)
         self.bgColor2 = CodableColor(color: secondaryColor)
@@ -76,7 +74,7 @@ struct Event: Identifiable, Codable, Hashable, Equatable {
         members: [Member],
         chats: [Chat],
         places: [Place],
-        plan: Plan,
+//        plan: Plan,
         eventDate: Date,
         bgColor1: CodableColor,
         bgColor2: CodableColor,
@@ -89,7 +87,6 @@ struct Event: Identifiable, Codable, Hashable, Equatable {
         self.members = members
         self.chats = chats
         self.places = places
-        self.plan = plan
         self.eventDate = eventDate
         self.bgColor1 = bgColor1
         self.bgColor2 = bgColor2
@@ -123,7 +120,8 @@ extension Event {
             // Inject placeholders for empty arrays
             if eventToSave.places.isEmpty {
                 eventToSave.places = [
-                    Place(id: "placeholder", name: "placeholder", descriptionAI: "placeholder", emoji: "📍")
+                    Place(id: "placeholder", name: "placeholder", descriptionAI: "placeholder", emoji: "📍", location: Location(name: "placeholder", coordinate: Coordinate(latitude: 0.0, longitude: 0.0))
+)
                 ]
             }
             if eventToSave.members.isEmpty {
@@ -131,11 +129,11 @@ extension Event {
                     Member(id: "placeholder", name: "placeholder", locationPlaceID: "placeholder")
                 ]
             }
-            if eventToSave.plan.locations.isEmpty {
-                eventToSave.plan.locations = [
-                    Location(name: "placeholder", coordinate: Coordinate(latitude: 0.0, longitude: 0.0), ofPlace: Place(id: "placeholder", name: "placeholder", descriptionAI: "placeholder", emoji: "📍"))
-                ]
-            }
+//            if eventToSave.plan.locations.isEmpty {
+//                eventToSave.plan.locations = [
+//                    Location(name: "placeholder", coordinate: Coordinate(latitude: 0.0, longitude: 0.0), ofPlace: Place(id: "placeholder", name: "placeholder", descriptionAI: "placeholder", emoji: "📍"))
+//                ]
+//            }
 
             let ref = Database.database().reference().child("events").child(eventToSave.id)
             let encoder = JSONEncoder()

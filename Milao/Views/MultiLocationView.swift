@@ -35,7 +35,7 @@ func regionThatFits(locations: [Location]) -> MKCoordinateRegion {
 
 
 struct MultiLocationView: View {
-    @Binding var locations: [Location]
+    @Binding var places: [Place]
     @State private var position: MapCameraPosition = .automatic // or use .region if you prefer
     @State private var mapItems: [MKMapItem] = []
     //    @State private var region: MKCoordinateRegion
@@ -64,21 +64,21 @@ struct MultiLocationView: View {
         }
         .onAppear {
             Task {
-                await getMapItems(locations)
-                let newRegion = regionThatFits(locations: locations)
+                await getMapItems(places)
+                let newRegion = regionThatFits(locations: places.map{ $0.location })
                 position = .region(newRegion)
             }
         }
-        .onChange(of: locations) {
-            let newRegion = regionThatFits(locations: locations)
+        .onChange(of: places) {
+            let newRegion = regionThatFits(locations: places.map{ $0.location })
             position = .region(newRegion)
         }
         .ignoresSafeArea()
     }
     
-    func getMapItems(_: [Location]) async {
-        for location in locations {
-            let newItem = try? await location.request.mapItem
+    func getMapItems(_: [Place]) async {
+        for place in places {
+            let newItem = try? await place.location.request.mapItem
             if let nwItem = newItem {
                 mapItems.append(nwItem)
             }

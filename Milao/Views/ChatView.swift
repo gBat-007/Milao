@@ -33,7 +33,7 @@ struct ChatsView: View {
                     }
                     .padding()
                 }
-                .onChange(of: chat.messages.count) { _ in
+                .onChange(of: chat.messages.count) {
                     if let last = chat.messages.last {
                         proxy.scrollTo(last.id, anchor: .bottom)
                     }
@@ -58,7 +58,7 @@ struct ChatsView: View {
             .padding(.vertical, 5)
             .background(Color(UIColor.systemGray6))
         }
-        .navigationTitle("Chats")
+        .navigationTitle("\(chat.title)")
     }
     
     func sendMessage() {

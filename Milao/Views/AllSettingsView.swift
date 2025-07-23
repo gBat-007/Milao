@@ -13,7 +13,7 @@ struct AllSettingsView: View {
     @State private var coordinate: CLLocationCoordinate2D?
     @State private var selectedEventID: String?
     @State private var showEventPicker: Bool = false
-
+    @State private var editLocationSheet: Bool = false
     @StateObject private var completerDelegate = SearchCompleterDelegate()
     private let searchCompleter = MKLocalSearchCompleter()
     private let geocoder = CLGeocoder()
@@ -36,41 +36,57 @@ struct AllSettingsView: View {
                 }
 
                 Section("Your Location") {
-                    TextField("Search Location", text: $tempLocation)
-                        .onChange(of: tempLocation) { _, newValue in
-                            searchCompleter.queryFragment = newValue
-                        }
+                    Button("Edit Your Location") {
+                        editLocationSheet = true
+                    }
+                    .sheet(isPresented: $editLocationSheet){
+                        NavigationStack {
+                            Form {
+                                TextField("Search Location", text: $tempLocation)
+                                    .onChange(of: tempLocation) { _, newValue in
+                                        searchCompleter.queryFragment = newValue
+                                    }
 
-                    if !completerDelegate.results.isEmpty {
-                        Section {
-                            ForEach(completerDelegate.results, id: \.self) { result in
-                                Button {
-                                    selectLocation(result)
-                                } label: {
-                                    VStack(alignment: .leading) {
-                                        Text(result.title).bold()
-                                        if !result.subtitle.isEmpty {
-                                            Text(result.subtitle)
-                                                .font(.subheadline)
-                                                .foregroundColor(.gray)
+                                if !completerDelegate.results.isEmpty {
+                                    Section {
+                                        ForEach(completerDelegate.results, id: \.self) { result in
+                                            Button {
+                                                selectLocation(result)
+                                            } label: {
+                                                VStack(alignment: .leading) {
+                                                    Text(result.title).bold()
+                                                    if !result.subtitle.isEmpty {
+                                                        Text(result.subtitle)
+                                                            .font(.subheadline)
+                                                            .foregroundColor(.gray)
+                                                    }
+                                                }
+                                                .padding(.vertical)
+                                            }
                                         }
                                     }
-                                    .padding(.vertical)
+                                }
+
+                                if let coord = coordinate {
+                                    Map {
+                                        Marker("Your Location", coordinate: coord)
+                                    }
+                                    .frame(height: 200)
+                                    .cornerRadius(10)
+                                } else {
+                                    Text("No location selected")
+                                        .foregroundColor(.gray)
+                                }
+                            }
+                            .navigationTitle("Edit Your Location")
+                            .toolbar {
+                                ToolbarItem(placement: .confirmationAction) {
+                                    Button("Done") { editLocationSheet = false }
                                 }
                             }
                         }
                     }
-
-                    if let coord = coordinate {
-                        Map {
-                            Marker("Your Location", coordinate: coord)
-                        }
-                        .frame(height: 200)
-                        .cornerRadius(10)
-                    } else {
-                        Text("No location selected")
-                            .foregroundColor(.gray)
-                    }
+                    
                 }
                 
                 Section("Live Activities") {

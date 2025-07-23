@@ -37,7 +37,8 @@ import FoundationModels
 // MARK: - View
 
 struct AIRecommendationView: View {
-    @Binding var event: Event
+    var placeType: String
+    var placeDesc: String
     let onSelect: (Location) -> Void
 
     @State private var locations: [PossibleLocation] = []
@@ -64,8 +65,7 @@ struct AIRecommendationView: View {
                         onSelect(Location(
                             id: UUID().uuidString,
                             name: loc.name,
-                            coordinate: Coordinate(latitude: loc.resultLatitude, longitude: loc.resultLongitude),
-                            ofPlace: event.places[event.plan.locations.count]
+                            coordinate: Coordinate(latitude: loc.resultLatitude, longitude: loc.resultLongitude)
                         ))
                     } label: {
                         VStack(alignment: .leading, spacing: 6) {
@@ -102,14 +102,7 @@ Return: name, description, coordinates, and ETA. ETA must always exceed 1 minute
 """
 
             )
-            var planIndex = 0
-            if !event.plan.locations.isEmpty {
-                planIndex = event.plan.locations.count
-            }
-            guard let themePlace = event.places[safe: planIndex] ?? event.places.first else {
-                errorMessage = "Missing theme."
-                return
-            }
+            
             guard let member = Member.decode(from: memberData),
                   let coord = member.coordinate else {
                 errorMessage = "No member location available"
@@ -118,7 +111,7 @@ Return: name, description, coordinates, and ETA. ETA must always exceed 1 minute
 
 
                         let prompt = """
-            Find 5 real-world places for this theme: "\(themePlace.name)" — "\(themePlace.descriptionAI)".
+            Find 5 real-world places for this theme: "\(placeType)" — "\(placeDesc)".
                         Use the tools to:
                         1. Search for real locations.
                         2. Estimate travel time.

@@ -25,7 +25,7 @@ struct WatchContentView: View {
                     WatchEventRow(event: event)
                         .padding(5)
                         .background(
-                            RoundedRectangle(cornerRadius: 25, style: .continuous)
+                            RoundedRectangle(cornerRadius: 5, style: .continuous)
                                 .fill(LinearGradient(
                                     colors: [event.bgColor1.color, event.bgColor2.color],
                                     startPoint: .topLeading,
@@ -58,7 +58,7 @@ struct WatchEventRow: View {
         VStack(spacing: 30) {
             HStack(alignment: .top, spacing: 16) {
                 Text(event.emoji)
-                    .font(.system(size: 36))
+                    .font(.title)
                     .padding(.top, 4)
                 Text(event.title)
                     .font(.headline)

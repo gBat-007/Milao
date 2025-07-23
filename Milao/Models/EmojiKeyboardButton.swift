@@ -7,13 +7,27 @@ struct EmojiKeyboardButton: UIViewControllerRepresentable {
     class Coordinator: NSObject, UITextFieldDelegate {
         var parent: EmojiKeyboardButton
         var textField: UITextField?
+        weak var button: UIButton?
 
         init(_ parent: EmojiKeyboardButton) {
             self.parent = parent
         }
 
         @objc func openKeyboard() {
+            animateButtonFlash()
             textField?.becomeFirstResponder()
+        }
+
+        func animateButtonFlash() {
+            guard let button = button else { return }
+
+            UIView.animate(withDuration: 0.1, animations: {
+                button.backgroundColor = UIColor.systemBlue
+            }, completion: { _ in
+                UIView.animate(withDuration: 0.2) {
+                    button.backgroundColor = UIColor.systemGray5
+                }
+            })
         }
 
         func textFieldDidChangeSelection(_ textField: UITextField) {
@@ -57,6 +71,7 @@ struct EmojiKeyboardButton: UIViewControllerRepresentable {
         button.layer.cornerRadius = 12
         button.addTarget(context.coordinator, action: #selector(Coordinator.openKeyboard), for: .touchUpInside)
 
+        context.coordinator.button = button
         vc.view.addSubview(button)
 
         textField.translatesAutoresizingMaskIntoConstraints = false

@@ -34,7 +34,7 @@ func saveEventRDB(_ event: Event, completion: @escaping (Result<Event, Error>) -
     // Inject placeholders for empty arrays
     if eventToSave.places.isEmpty {
         eventToSave.places = [
-            Place(id: "placeholder", name: "placeholder", descriptionAI: "placeholder", emoji: "📍")
+            Place(id: "placeholder", name: "placeholder", descriptionAI: "placeholder", emoji: "📍", location: Location(name: "placeholder", coordinate: Coordinate(latitude: 0.0, longitude: 0.0)))
         ]
     }
     if eventToSave.members.isEmpty {
@@ -42,11 +42,11 @@ func saveEventRDB(_ event: Event, completion: @escaping (Result<Event, Error>) -
             Member(id: "placeholder", name: "placeholder", locationPlaceID: "placeholder")
         ]
     }
-    if eventToSave.plan.locations.isEmpty {
-        eventToSave.plan.locations = [
-            Location(name: "placeholder", coordinate: Coordinate(latitude: 0.0, longitude: 0.0), ofPlace: Place(id: "placeholder", name: "placeholder", descriptionAI: "placeholder", emoji: "📍"))
-        ]
-    }
+//    if eventToSave.plan.locations.isEmpty {
+//        eventToSave.plan.locations = [
+//            Location(name: "placeholder", coordinate: Coordinate(latitude: 0.0, longitude: 0.0), ofPlace: Place(id: "placeholder", name: "placeholder", descriptionAI: "placeholder", emoji: "📍"))
+//        ]
+//    }
     if eventToSave.chats.isEmpty {
         eventToSave.chats = [Chat(title: "General", emoji: "💬", messages: [Message(text: "Welcome to the general chat.", isSentByMemberName: "Admin")])]
     }
@@ -130,7 +130,7 @@ func observeEventsRDB(onChange: @escaping ([Event]) -> Void) {
                 // Remove placeholder entries
                 event.members.removeAll { $0.id == "placeholder" }
                 event.places.removeAll { $0.id == "placeholder" }
-                event.plan.locations.removeAll { $0.name == "placeholder" }
+//                event.plan.locations.removeAll { $0.name == "placeholder" }
 
                 let isOwnedByUser = event.ownerID == deviceId
                 let isUserInMembers = currentMember.map { member in
