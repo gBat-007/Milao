@@ -20,10 +20,6 @@ struct WatchContentView: View {
 
     var body: some View {
         NavigationStack {
-            VStack {
-                Button("Refresh Events") {
-                    WatchSessionManager.shared.requestEvents()
-                }
                 List(session.events) { event in
                     NavigationLink(destination: WatchEventDetailView(event: event)) {
                         WatchEventRow(event: event)
@@ -44,10 +40,12 @@ struct WatchContentView: View {
                             .blur(radius: 0.3) // small blur for softness
                             .padding(.vertical, 2)
                     }
+                    Spacer()
+                    Button("Refresh Events") {
+                        WatchSessionManager.shared.requestEvents()
+                    }
                 }
                 .navigationTitle("Events")
-                
-            }
         }
         .onAppear {
             print("👀 WatchContentView appeared — requesting events")

@@ -97,7 +97,7 @@ struct AllSettingsView: View {
 
                     // 2. Picker to select an event by title
                     Picker("Choose Event", selection: $selectedEventID) {
-                        ForEach(events.filter { $0.eventDate > Date() }) { event in
+                        ForEach(events.filter { $0.eventDate > Date() && $0.eventDate < Date().addingTimeInterval(24 * 60 * 60) }) { event in
                             Text(event.title).tag(event.id)
                         }
                     }
