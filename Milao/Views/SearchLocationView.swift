@@ -59,16 +59,22 @@ struct SearchLocationView: View {
     @State private var selectedCoordinate: CLLocationCoordinate2D?
     @State private var isSearching = false
     @State private var travelInfo: [MKMapItem: (eta: TimeInterval, distance: CLLocationDistance)] = [:]
-
+    
+    let members: [Member]
     let searchCenter: CLLocationCoordinate2D
+    let useAverageETA: Bool
     let onLocationSelected: (MKMapItem) -> Void
 
     init(
         near coordinate: CLLocationCoordinate2D,
+        useAvg useAvgETA: Bool,
+        members members: [Member],
         onLocationSelected: @escaping (MKMapItem) -> Void
     ) {
         self.searchCenter = coordinate
         self.onLocationSelected = onLocationSelected
+        self.useAverageETA = useAvgETA
+        self.members = members
     }
 
     var body: some View {
@@ -180,28 +186,65 @@ struct SearchLocationView: View {
     private func runSearch() {
         guard !searchText.isEmpty else { return }
         isSearching = true
+        mapItems = []
+        travelInfo = [:]
+
         searchNearbyPlaces(query: searchText, near: searchCenter) { items in
             self.mapItems = items
-            self.travelInfo = [:]
             self.isSearching = false
 
             Task {
                 for item in items {
                     let destination = item.placemark.coordinate
-                    do {
-                        let eta = try await calculateETA(from: searchCenter, to: destination)
-                        let distance = CLLocation(latitude: searchCenter.latitude, longitude: searchCenter.longitude)
-                            .distance(from: CLLocation(latitude: destination.latitude, longitude: destination.longitude))
-                        DispatchQueue.main.async {
-                            travelInfo[item] = (eta: eta, distance: distance)
+
+                    if useAverageETA {
+                        // 👥 Use ETA from all members
+                        var totalETA: TimeInterval = 0
+                        var totalDistance: CLLocationDistance = 0
+                        var count = 0
+
+                        for member in members {
+                            if let memberCoord = member.coordinate {
+                                do {
+                                    let eta = try await calculateETA(from: memberCoord, to: destination)
+                                    let distance = CLLocation(latitude: memberCoord.latitude, longitude: memberCoord.longitude)
+                                        .distance(from: CLLocation(latitude: destination.latitude, longitude: destination.longitude))
+                                    
+                                    totalETA += eta
+                                    totalDistance += distance
+                                    count += 1
+                                } catch {
+                                    print("ETA error for member \(member.name): \(error.localizedDescription)")
+                                }
+                            }
                         }
-                    } catch {
-                        print("ETA fetch failed for \(item.name ?? "unknown"): \(error.localizedDescription)")
+
+                        if count > 0 {
+                            let avgETA = totalETA / Double(count)
+                            let avgDistance = totalDistance / Double(count)
+                            DispatchQueue.main.async {
+                                travelInfo[item] = (eta: avgETA, distance: avgDistance)
+                            }
+                        }
+                    } else {
+                        // 📍 Use only searchCenter
+                        do {
+                            let eta = try await calculateETA(from: searchCenter, to: destination)
+                            let distance = CLLocation(latitude: searchCenter.latitude, longitude: searchCenter.longitude)
+                                .distance(from: CLLocation(latitude: destination.latitude, longitude: destination.longitude))
+                            
+                            DispatchQueue.main.async {
+                                travelInfo[item] = (eta: eta, distance: distance)
+                            }
+                        } catch {
+                            print("ETA fetch failed: \(error.localizedDescription)")
+                        }
                     }
                 }
             }
         }
     }
+
 
     private func selectMapItem(_ item: MKMapItem) {
         selectedMapItem = item

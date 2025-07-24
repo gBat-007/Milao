@@ -64,6 +64,7 @@ struct ChatsTab: View {
         .sheet(isPresented: $presentAddChatSheet) {
             AddChatView { newChat in
                 event.chats.append(newChat)
+                event.saveToDatabase()
             }
             .presentationDetents([.medium])
         }
@@ -112,7 +113,7 @@ struct AddChatView: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Add") {
-                        let newChat = Chat(title: title, emoji: emoji, messages: [])
+                        let newChat = Chat(title: title, emoji: emoji, messages: [Message(text: "Welcome to the \(title) chat.", isSentByMemberName: "Admin")])
                         onAdd(newChat)
                         dismiss()
                     }

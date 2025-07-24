@@ -60,7 +60,7 @@ struct AllSettingsView: View {
                     Button("Edit Your Location") {
                         editLocationSheet = true
                     }
-                    .buttonStyle(.borderedProminent)
+                    
                     .sheet(isPresented: $editLocationSheet){
                         NavigationStack {
                             Form {
@@ -150,14 +150,14 @@ struct AllSettingsView: View {
                         }
                     }
                     .disabled(selectedEventID == nil)
-                    .buttonStyle(.borderedProminent)
+                    
 
                     // 4. Stop Button - stops all Live Activities
                     Button("Stop All Live Activities") {
                             TimerManager.shared.stopAllLiveActivities()
                     }
                     .tint(.red)
-                    .buttonStyle(.borderedProminent)
+                    
                 }
                 
             }

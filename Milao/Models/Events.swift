@@ -130,6 +130,7 @@ extension Event {
                     Member(id: "placeholder", name: "placeholder", locationPlaceID: "placeholder")
                 ]
             }
+            
 //            if eventToSave.plan.locations.isEmpty {
 //                eventToSave.plan.locations = [
 //                    Location(name: "placeholder", coordinate: Coordinate(latitude: 0.0, longitude: 0.0), ofPlace: Place(id: "placeholder", name: "placeholder", descriptionAI: "placeholder", emoji: "📍"))

@@ -16,6 +16,7 @@ struct AddPlaceView: View {
     var previousPlace: Place? //if it has a value of Place
     @AppStorage("memberData") private var memberData: Data?
     @Environment(\.dismiss) private var dismiss
+    @Binding var members: [Member]
 
     var body: some View {
         NavigationStack {
@@ -103,7 +104,7 @@ struct AddPlaceView: View {
 
                 
                 if step == 2 {
-                    AddLocationView(placeType: placeType, placeDesc: finalDescription ?? "Description Not Available", previousPlace: previousPlace){ loc in
+                    AddLocationView(placeType: placeType, placeDesc: finalDescription ?? "Description Not Available", previousPlace: previousPlace, members: $members){ loc in
                         finalize(location: loc)
                         dismiss()
                     }
@@ -160,7 +161,6 @@ struct AddPlaceView: View {
         } catch {
             errorMessage = "Failed to generate emoji."
         }
-
         isThinking = false
     }
 

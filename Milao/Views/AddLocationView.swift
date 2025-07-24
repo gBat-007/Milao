@@ -6,6 +6,7 @@ struct AddLocationView: View {
     var placeType: String
     var placeDesc: String
     var previousPlace: Place?
+    @Binding var members: [Member]
     let onComplete: (Location) -> Void
 
     enum SheetType: Identifiable {
@@ -19,6 +20,7 @@ struct AddLocationView: View {
     @State private var activeSheet: SheetType?
     @State private var isCoordinateReady: Bool = false
     @State private var closeTo: Coordinate = .init(latitude: 0.0, longitude: 0.0)
+    @State private var useAverageETA: Bool = false
     @AppStorage("memberData") private var memberData: Data?
 
     var body: some View {
@@ -30,17 +32,19 @@ struct AddLocationView: View {
 
             // Custom Card Buttons
             VStack(spacing: 12) {
+                
                 Button {
                     activeSheet = .search
                 } label: {
                     cardButton(title: "Search", subtitle: "Manually find a place", systemImage: "magnifyingglass")
                 }
-
+                
                 Button {
                     activeSheet = .ai
                 } label: {
                     cardButton(title: "AI Recommend", subtitle: "Get a suggestion based on description", systemImage: "sparkles")
                 }
+                
             }
             .padding(.horizontal)
 
@@ -62,7 +66,7 @@ struct AddLocationView: View {
                 if isCoordinateReady {
                     switch sheet {
                     case .search:
-                        SearchLocationView(near: closeTo.clLocation) { mapItem in
+                        SearchLocationView(near: closeTo.clLocation, useAvg: useAverageETA, members: members) { mapItem in
                             onComplete(
                                 Location(
                                     name: mapItem.name ?? "Unknown Name",
@@ -97,6 +101,7 @@ struct AddLocationView: View {
                 let member = Member.decode(from: memberData)
                 closeTo = Coordinate(latitude: member?.coordinate?.latitude ?? 0.0,
                                      longitude: member?.coordinate?.longitude ?? 0.0)
+                useAverageETA = true
             }
 
             DispatchQueue.main.async {

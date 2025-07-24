@@ -95,10 +95,10 @@ struct AIRecommendationView: View {
         do {
             // 🔁 Session with Tool usage
             let recommendationSession = LanguageModelSession(
-                tools: [LocationSearchTool(), LocationETAEstimator()],
+                tools: [LocationSearchTool()],
                 instructions: """
-Find real locations close to the provided location using the "searchNearbyLocations" and "estimateLocationETAs" tools.
-Return: name, description, coordinates, and ETA. ETA must always exceed 1 minute.
+Find real locations close to the provided location using the "searchNearbyLocations" tool.
+Return: name, description, coordinates, and ETA.
 """
 
             )

@@ -37,76 +37,95 @@ struct ContentView: View {
 
     var body: some View {
         NavigationStack {
-            EventsList(events: $events)
-                .navigationTitle("My Events")
-                .toolbar {
-                    ToolbarItem(placement: .topBarLeading) {
-                        Button("Settings", systemImage: "gear") {
-                            if let decoded = Member.decode(from: memberData) {
-                                currentMember = decoded
-                                showProfileSheet = true // ✅ Show manually
-                            } else {
-                                profileDoesNotWork.toggle()
-                            }
-                        }
-                    }
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button("Add Event", systemImage: "plus") {
+            Group {
+                if events.isEmpty {
+                    Spacer()
+                    VStack(spacing: 20) {
+                        Image(systemName: "calendar.badge.plus")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 80, height: 80)
+                            .foregroundColor(.accentColor)
+                            .padding(.bottom, 10)
+
+                        Text("No events yet!")
+                            .font(.title2)
+                            .foregroundStyle(.secondary)
+
+                        Button(action: {
                             showAddMenu = true
+                        }) {
+                            Label("Create Your First Event", systemImage: "plus")
+                                .font(.headline)
+                                .padding()
+                                .frame(maxWidth: .infinity)
+                                .background(Color.accentColor)
+                                .foregroundColor(.white)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                                .padding(.horizontal)
                         }
-                        .sheet(isPresented: $showAddMenu) {
-                            AddEventMenuView { newEvent in
-                                Task {
-                                    let granted = try await AlarmManager.shared.requestAuthorization()
-                                    if granted == .authorized {
-                                                        print("✅ Alarm permission granted.")
-                                                    } else {
-                                                        print("❌ Alarm permission denied.")
-                                                    }
-                                    await scheduleAlarm(for: newEvent)
-                                }
-                                saveEventRDB(newEvent) { result in
-                                    if case let .failure(error) = result {
-                                        print("❌ Failed to save to Firebase: \(error)")
-                                    } else {
-//                                        if var soonest = events
-//                                            .filter({ $0.eventDate > Date() })
-//                                            .sorted(by: { $0.eventDate < $1.eventDate })
-//                                            .first {
-//                                            
-//                                            TimerManager.shared.startSimpleTimer(to: soonest.asWidgetEvent)
-//                                        }
-                                        print("✅ Event saved to Firebase.")
-                                    }
-                                }
+                        .buttonStyle(.plain)
+                    }
+                    Spacer()
+                } else {
+                    EventsList(events: $events)
+                }
+            }
+            .navigationTitle("My Events")
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Settings", systemImage: "gear") {
+                        if let decoded = Member.decode(from: memberData) {
+                            currentMember = decoded
+                            showProfileSheet = true
+                        } else {
+                            profileDoesNotWork.toggle()
+                        }
+                    }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Add Event", systemImage: "plus") {
+                        showAddMenu = true
+                    }
+                }
+            }
+            .sheet(isPresented: $showAddMenu) {
+                AddEventMenuView { newEvent in
+                    Task {
+                        let granted = try await AlarmManager.shared.requestAuthorization()
+                        if granted == .authorized {
+                            print("✅ Alarm permission granted.")
+                        } else {
+                            print("❌ Alarm permission denied.")
+                        }
+                        await scheduleAlarm(for: newEvent)
+                    }
+                    saveEventRDB(newEvent) { result in
+                        if case let .failure(error) = result {
+                            print("❌ Failed to save to Firebase: \(error)")
+                        } else {
+                            print("✅ Event saved to Firebase.")
+                        }
+                    }
+                }
+            }
+            .sheet(isPresented: $showProfileSheet) {
+                if let decoded = Member.decode(from: memberData) {
+                    NavigationStack {
+                        AllSettingsView(member: Binding(
+                            get: { decoded },
+                            set: { updated in
+                                self.currentMember = updated
+                                memberData = updated.encodeToData()
                             }
-                        }
+                        ), events: $events)
+                        .navigationTitle("My Profile")
+                        .navigationBarTitleDisplayMode(.inline)
                     }
+                } else {
+                    Text("No member loaded")
                 }
-                .sheet(isPresented: $showProfileSheet) { // ✅ Controlled manually
-                    if let decoded = Member.decode(from: memberData) {
-                        NavigationStack {
-                            AllSettingsView(member: Binding(
-                                get: { decoded },
-                                set: { updated in
-                                    self.currentMember = updated
-                                    memberData = updated.encodeToData()
-                                }
-                            ), events: $events)
-                            .navigationTitle("My Profile")
-                            .navigationBarTitleDisplayMode(.inline)
-//                            .toolbar {
-//                                ToolbarItem(placement: .confirmationAction) {
-//                                    Button("Done") {
-//                                        showProfileSheet = false
-//                                    }
-//                                }
-//                            }
-                        }
-                    } else {
-                        Text("No member loaded")
-                    }
-                }
+            }
         }
         .onAppear {
             showOnboarding = !hasLaunchedBefore
