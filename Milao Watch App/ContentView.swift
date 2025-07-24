@@ -40,12 +40,11 @@ struct WatchContentView: View {
                             .blur(radius: 0.3) // small blur for softness
                             .padding(.vertical, 2)
                     }
-                    Spacer()
-                    Button("Refresh Events") {
-                        WatchSessionManager.shared.requestEvents()
-                    }
                 }
                 .navigationTitle("Events")
+            Button("Refresh Events") {
+                WatchSessionManager.shared.requestEvents()
+            }
         }
         .onAppear {
             print("👀 WatchContentView appeared — requesting events")

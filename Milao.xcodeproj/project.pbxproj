@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D31089542E32A26B00D54E2F /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D36B74802E2AC37F000DA1F5 /* WidgetKit.framework */; };
+		D31089552E32A26B00D54E2F /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D36B74822E2AC37F000DA1F5 /* SwiftUI.framework */; };
+		D31089662E32A27000D54E2F /* AlarmKitExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D31089532E32A26B00D54E2F /* AlarmKitExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		D36B744D2E2AC094000DA1F5 /* FirebaseAI in Frameworks */ = {isa = PBXBuildFile; productRef = D36B744C2E2AC094000DA1F5 /* FirebaseAI */; };
 		D36B744F2E2AC094000DA1F5 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = D36B744E2E2AC094000DA1F5 /* FirebaseAnalytics */; };
 		D36B74512E2AC094000DA1F5 /* FirebaseAnalyticsCore in Frameworks */ = {isa = PBXBuildFile; productRef = D36B74502E2AC094000DA1F5 /* FirebaseAnalyticsCore */; };
@@ -60,6 +63,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		D31089642E32A27000D54E2F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D3EF73E32E2ABF8000371557 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D31089522E32A26B00D54E2F;
+			remoteInfo = AlarmKitExtension;
+		};
 		D36B74922E2AC381000DA1F5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = D3EF73E32E2ABF8000371557 /* Project object */;
@@ -84,6 +94,7 @@
 			dstSubfolderSpec = 13;
 			files = (
 				D36B74942E2AC381000DA1F5 /* TimerWidgetExtensionExtension.appex in Embed Foundation Extensions */,
+				D31089662E32A27000D54E2F /* AlarmKitExtension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -102,6 +113,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D31089532E32A26B00D54E2F /* AlarmKitExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = AlarmKitExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		D35DB3312E3128F2001D5C57 /* Milao-Watch-App-Watch-App-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Milao-Watch-App-Watch-App-Info.plist"; sourceTree = "<group>"; };
 		D36B747E2E2AC37F000DA1F5 /* TimerWidgetExtensionExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TimerWidgetExtensionExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		D36B74802E2AC37F000DA1F5 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
@@ -111,6 +123,20 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		D310896A2E32A27000D54E2F /* Exceptions for "AlarmKit" folder in "AlarmKitExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = D31089522E32A26B00D54E2F /* AlarmKitExtension */;
+		};
+		D31089D42E32A38D00D54E2F /* Exceptions for "Milao" folder in "AlarmKitExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Models/EventAlarmMetadata.swift,
+			);
+			target = D31089522E32A26B00D54E2F /* AlarmKitExtension */;
+		};
 		D35DB3362E313EAD001D5C57 /* Exceptions for "Milao" folder in "Milao" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -145,6 +171,14 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		D31089562E32A26B00D54E2F /* AlarmKit */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				D310896A2E32A27000D54E2F /* Exceptions for "AlarmKit" folder in "AlarmKitExtension" target */,
+			);
+			path = AlarmKit;
+			sourceTree = "<group>";
+		};
 		D36B74842E2AC37F000DA1F5 /* TimerWidgetExtension */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -164,6 +198,7 @@
 			exceptions = (
 				D35DB3362E313EAD001D5C57 /* Exceptions for "Milao" folder in "Milao" target */,
 				D36C9C6D2E2FDAA000A7B84B /* Exceptions for "Milao" folder in "TimerWidgetExtensionExtension" target */,
+				D31089D42E32A38D00D54E2F /* Exceptions for "Milao" folder in "AlarmKitExtension" target */,
 			);
 			path = Milao;
 			sourceTree = "<group>";
@@ -171,6 +206,15 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		D31089502E32A26B00D54E2F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D31089552E32A26B00D54E2F /* SwiftUI.framework in Frameworks */,
+				D31089542E32A26B00D54E2F /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D36B747B2E2AC37F000DA1F5 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -259,6 +303,7 @@
 				D3EF73ED2E2ABF8000371557 /* Milao */,
 				D36B74842E2AC37F000DA1F5 /* TimerWidgetExtension */,
 				D36C9C562E2FD96900A7B84B /* Milao Watch App */,
+				D31089562E32A26B00D54E2F /* AlarmKit */,
 				D36B747F2E2AC37F000DA1F5 /* Frameworks */,
 				D3EF73EC2E2ABF8000371557 /* Products */,
 			);
@@ -270,6 +315,7 @@
 				D3EF73EB2E2ABF8000371557 /* Milao.app */,
 				D36B747E2E2AC37F000DA1F5 /* TimerWidgetExtensionExtension.appex */,
 				D36C9C552E2FD96900A7B84B /* Milao Watch App Watch App.app */,
+				D31089532E32A26B00D54E2F /* AlarmKitExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -277,6 +323,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		D31089522E32A26B00D54E2F /* AlarmKitExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D31089692E32A27000D54E2F /* Build configuration list for PBXNativeTarget "AlarmKitExtension" */;
+			buildPhases = (
+				D310894F2E32A26B00D54E2F /* Sources */,
+				D31089502E32A26B00D54E2F /* Frameworks */,
+				D31089512E32A26B00D54E2F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				D31089562E32A26B00D54E2F /* AlarmKit */,
+			);
+			name = AlarmKitExtension;
+			packageProductDependencies = (
+			);
+			productName = AlarmKitExtension;
+			productReference = D31089532E32A26B00D54E2F /* AlarmKitExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		D36B747D2E2AC37F000DA1F5 /* TimerWidgetExtensionExtension */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = D36B74962E2AC381000DA1F5 /* Build configuration list for PBXNativeTarget "TimerWidgetExtensionExtension" */;
@@ -359,6 +427,7 @@
 			dependencies = (
 				D36B74932E2AC381000DA1F5 /* PBXTargetDependency */,
 				D36C9C5E2E2FD96B00A7B84B /* PBXTargetDependency */,
+				D31089652E32A27000D54E2F /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				D3EF73ED2E2ABF8000371557 /* Milao */,
@@ -403,6 +472,9 @@
 				LastSwiftUpdateCheck = 2600;
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
+					D31089522E32A26B00D54E2F = {
+						CreatedOnToolsVersion = 26.0;
+					};
 					D36B747D2E2AC37F000DA1F5 = {
 						CreatedOnToolsVersion = 26.0;
 					};
@@ -434,11 +506,19 @@
 				D3EF73EA2E2ABF8000371557 /* Milao */,
 				D36B747D2E2AC37F000DA1F5 /* TimerWidgetExtensionExtension */,
 				D36C9C542E2FD96900A7B84B /* Milao Watch App Watch App */,
+				D31089522E32A26B00D54E2F /* AlarmKitExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		D31089512E32A26B00D54E2F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D36B747C2E2AC37F000DA1F5 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -463,6 +543,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		D310894F2E32A26B00D54E2F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D36B747A2E2AC37F000DA1F5 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -487,6 +574,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		D31089652E32A27000D54E2F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D31089522E32A26B00D54E2F /* AlarmKitExtension */;
+			targetProxy = D31089642E32A27000D54E2F /* PBXContainerItemProxy */;
+		};
 		D36B74932E2AC381000DA1F5 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = D36B747D2E2AC37F000DA1F5 /* TimerWidgetExtensionExtension */;
@@ -500,6 +592,68 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		D31089672E32A27000D54E2F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 22P5RFVD9A;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AlarmKit/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = AlarmKit;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lmao.mlmao.AlarmKit;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D31089682E32A27000D54E2F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 22P5RFVD9A;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AlarmKit/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = AlarmKit;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lmao.mlmao.AlarmKit;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		D36B74972E2AC381000DA1F5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -507,7 +661,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = DJCXD3DAF7;
+				DEVELOPMENT_TEAM = 22P5RFVD9A;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TimerWidgetExtension/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = TimerWidgetExtension;
@@ -518,7 +672,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.lmao.mlmao.TimerWidgetExtension;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lmao.mlmao.TimerWidgetExtensionExtension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -536,7 +690,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = DJCXD3DAF7;
+				DEVELOPMENT_TEAM = 22P5RFVD9A;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TimerWidgetExtension/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = TimerWidgetExtension;
@@ -547,7 +701,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.lmao.mlmao.TimerWidgetExtension;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lmao.mlmao.TimerWidgetExtensionExtension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -566,7 +720,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = DJCXD3DAF7;
+				DEVELOPMENT_TEAM = 22P5RFVD9A;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Milao-Watch-App-Watch-App-Info.plist";
@@ -578,7 +732,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.lmao.mlmao.watch;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lmao.mlmao.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
@@ -601,7 +755,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = DJCXD3DAF7;
+				DEVELOPMENT_TEAM = 22P5RFVD9A;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Milao-Watch-App-Watch-App-Info.plist";
@@ -613,7 +767,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.lmao.mlmao.watch;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lmao.mlmao.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
@@ -758,7 +912,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = DJCXD3DAF7;
+				DEVELOPMENT_TEAM = 22P5RFVD9A;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Milao/Info.plist;
@@ -793,7 +947,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = DJCXD3DAF7;
+				DEVELOPMENT_TEAM = 22P5RFVD9A;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Milao/Info.plist;
@@ -822,6 +976,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		D31089692E32A27000D54E2F /* Build configuration list for PBXNativeTarget "AlarmKitExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D31089672E32A27000D54E2F /* Debug */,
+				D31089682E32A27000D54E2F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		D36B74962E2AC381000DA1F5 /* Build configuration list for PBXNativeTarget "TimerWidgetExtensionExtension" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

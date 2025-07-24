@@ -1,20 +1,27 @@
 import AlarmKit
 import SwiftUI
-
-nonisolated struct EventAlarmMetadata: AlarmMetadata {}
+import ActivityKit
+import WidgetKit
 
 func scheduleAlarm(for event: Event) async {
     let alert = AlarmPresentation.Alert(
         title: LocalizedStringResource(stringLiteral: event.title),
-        stopButton: AlarmButton(text: "Stop", textColor: .white, systemImageName: "stop.fill")
+        stopButton: AlarmButton(text: "Dismiss", textColor: .white, systemImageName: "stop.fill")
     )
     let presentation = AlarmPresentation(alert: alert)
 
+    let metadata = EventAlarmMetadata(
+        id: event.id,
+        title: event.title,
+        emoji: event.emoji
+    )
+
     let attributes = AlarmAttributes<EventAlarmMetadata>(
         presentation: presentation,
-        metadata: EventAlarmMetadata(),
-        tintColor: .red
+        metadata: metadata,
+        tintColor: .orange // Optional: match bgColor1 if you'd like
     )
+
 
     let configuration = AlarmManager.AlarmConfiguration(
         countdownDuration: nil,
@@ -33,3 +40,4 @@ func scheduleAlarm(for event: Event) async {
         print("❌ Failed to schedule alarm:", error)
     }
 }
+
