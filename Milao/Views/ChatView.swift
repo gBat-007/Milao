@@ -9,29 +9,41 @@ struct ChatsView: View {
         VStack {
             ScrollViewReader { proxy in
                 ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 10) {
+                    LazyVStack(alignment: .leading, spacing: 12) {
                         ForEach(chat.messages) { message in
-                            HStack {
-                                if message.isSentByMemberName == thisMember {
-                                    Spacer()
-                                    Text(message.text)
-                                        .padding()
-                                        .background(Color.blue)
-                                        .foregroundColor(.white)
-                                        .cornerRadius(12)
-                                } else {
-                                    Text(message.text)
-                                        .padding()
-                                        .background(Color.orange)
-                                        .foregroundColor(.black)
-                                        .cornerRadius(12)
-                                    Spacer()
+                            VStack(alignment: message.isSentByMemberName == thisMember ? .trailing : .leading, spacing: 2) {
+                                // Name above the message
+                                Text(message.isSentByMemberName)
+                                    .font(.caption2)
+                                    .foregroundColor(.gray)
+                                    .padding(.horizontal, 8)
+
+                                // Message bubble
+                                HStack {
+                                    if message.isSentByMemberName == thisMember {
+                                        Spacer()
+                                        Text(message.text)
+                                            .padding(.horizontal, 12)
+                                            .padding(.vertical, 8)
+                                            .background(Color.blue)
+                                            .foregroundColor(.white)
+                                            .cornerRadius(14)
+                                    } else {
+                                        Text(message.text)
+                                            .padding(.horizontal, 12)
+                                            .padding(.vertical, 8)
+                                            .background(Color.orange.opacity(0.9))
+                                            .foregroundColor(.black)
+                                            .cornerRadius(14)
+                                        Spacer()
+                                    }
                                 }
                             }
                             .id(message.id)
+                            .padding(.horizontal)
                         }
                     }
-                    .padding()
+                    .padding(.top)
                 }
                 .onChange(of: chat.messages.count) {
                     if let last = chat.messages.last {
@@ -40,11 +52,14 @@ struct ChatsView: View {
                 }
             }
 
+            Divider()
+
+            // Input field and send button
             HStack {
                 TextField("Type a message...", text: $newMessage)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .padding(.horizontal)
-                
+                    .padding(.leading)
+
                 Button(action: sendMessage) {
                     Image(systemName: "paperplane.fill")
                         .foregroundColor(.white)
@@ -55,17 +70,24 @@ struct ChatsView: View {
                 .disabled(newMessage.trimmingCharacters(in: .whitespaces).isEmpty)
                 .padding(.trailing)
             }
-            .padding(.vertical, 5)
+            .padding(.vertical, 8)
             .background(Color(UIColor.systemGray6))
         }
-        .navigationTitle("\(chat.title)")
+        .navigationTitle(chat.title)
     }
     
     func sendMessage() {
         let trimmed = newMessage.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return }
+
         chat.messages.append(Message(text: trimmed, isSentByMemberName: thisMember))
         newMessage = ""
+
+        // Save event manually via Notification or callback (recommended)
+        NotificationCenter.default.post(name: .didSendMessage, object: nil)
     }
 }
 
+extension Notification.Name {
+    static let didSendMessage = Notification.Name("didSendMessage")
+}

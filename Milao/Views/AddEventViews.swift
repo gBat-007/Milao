@@ -13,12 +13,26 @@ struct AddEventMenuView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                Section {
-                    Button("Create New Event") { createMode = true }
-                    Button("Join with Code") { joinMode = true }
-                }
+            VStack(spacing: 20) {
+                        AddEventOption(
+                            title: "Create New Event",
+                            subtitle: "Start a fresh event and invite others",
+                            systemImage: "plus.circle"
+                        ) {
+                            createMode = true
+                        }
+
+                        AddEventOption(
+                            title: "Join with Code",
+                            subtitle: "Enter a code to join an existing event",
+                            systemImage: "person.2.fill"
+                        ) {
+                            joinMode = true
+                        }
+
+                        Spacer()
             }
+            .padding()
             .navigationTitle("Add Event")
             .sheet(isPresented: $createMode) {
                 CreateEventView { newEvent in
@@ -133,6 +147,31 @@ struct CreateEventView: View {
         }
     }
 }
+
+struct InviteCodeTextField: View {
+    var placeholder: String
+    @Binding var text: String
+    var keyboardType: UIKeyboardType = .alphabet
+
+    var body: some View {
+        TextField(placeholder, text: $text)
+            .padding(.vertical, 14)
+            .padding(.horizontal, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(UIColor.secondarySystemBackground))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+            )
+            .keyboardType(keyboardType)
+            .autocorrectionDisabled()
+            .font(.body)
+    }
+}
+
+
 struct JoinEventView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var code = ""
@@ -142,23 +181,65 @@ struct JoinEventView: View {
     var onSuccess: (Event) -> Void
 
     var body: some View {
-        Form {
-            TextField("Invite Code", text: $code)
-            if let errorMessage {
-                Text(errorMessage).foregroundColor(.red)
+            NavigationStack {
+                VStack(spacing: 24) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Invite Code")
+                            .font(.headline)
+
+                        InviteCodeTextField(
+                            placeholder: "6-letter code",
+                            text: $code,
+                            keyboardType: .asciiCapable,
+                        )
+                        .onChange(of: code) {
+                            if code.count > 6 {
+                                code = String(code.prefix(6))
+                            }
+                        }
+
+                    }
+
+                    if let errorMessage {
+                        Text(errorMessage)
+                            .foregroundColor(.red)
+                            .font(.footnote)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+                            .transition(.opacity)
+                    }
+
+                    Button(action: joinEvent) {
+                        HStack {
+                            if isJoining {
+                                ProgressView()
+                            }
+                            Text(isJoining ? "Joining..." : "Join")
+                                .fontWeight(.semibold)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(code.count == 6 && !isJoining ? Color.blue : Color.gray.opacity(0.3))
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                    }
+                    .disabled(code.count != 6 || isJoining)
+                    .animation(.easeInOut, value: isJoining)
+
+                    Spacer()
+                }
+                .padding()
+                .navigationTitle("Join Event")
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") {
+                            dismiss()
+                        }
+                    }
+                }
             }
-            Button(isJoining ? "Joining..." : "Join") {
-                joinEvent()
-            }
-            .disabled(code.count != 6 || isJoining)
         }
-        .navigationTitle("Join Event")
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") { dismiss() }
-            }
-        }
-    }
+    
     private func joinEvent() {
         isJoining = true
         errorMessage = nil

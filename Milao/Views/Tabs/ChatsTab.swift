@@ -38,6 +38,16 @@ struct ChatsTab: View {
                     }
                 }
                 .onDelete(perform: deleteChat)
+                .onAppear {
+                    currentMemberName = Member.decode(from: memberData)?.name ?? "Unknown Name"
+                    
+                    NotificationCenter.default.addObserver(forName: .didSendMessage, object: nil, queue: .main) { _ in
+                        event.saveToDatabase()
+                    }
+                }
+                .onDisappear {
+                    NotificationCenter.default.removeObserver(self, name: .didSendMessage, object: nil)
+                }
             }
             .onAppear {
                 currentMemberName = Member.decode(from: memberData)?.name ?? "Unknown Name"

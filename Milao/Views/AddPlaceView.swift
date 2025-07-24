@@ -56,31 +56,51 @@ struct AddPlaceView: View {
                 }
 
                 if step == 1 {
-                    // Step 2 UI: select AI/manual
-                    VStack(spacing: 16) {
-                        if !emoji.isEmpty {
-                            Text("\(placeType)  \(emoji)")
-                                .font(.title2)
-                                .bold()
-                                .padding(.top)
-                        }
+                    VStack(spacing: 24) {
+                        // 📍 Heading
+                        VStack(spacing: 8) {
+                            if !emoji.isEmpty {
+                                Text("\(placeType)  \(emoji)")
+                                    .font(.title)
+                                    .bold()
+                            }
 
-                        Button("Answer AI Guided Questions") {
+                            Text("How would you like to describe this place?")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                        .multilineTextAlignment(.center)
+                        .padding(.top, 32)
+                        .padding(.horizontal)
+
+                        // 🧠 AI Mode Button
+                        Button {
                             presentAIMode = true
+                        } label: {
+                            choiceCard(
+                                title: "Answer AI-Guided Questions",
+                                subtitle: "Let us help you describe the place step by step.",
+                                systemImage: "wand.and.stars"
+                            )
                         }
-                        .glassEffect(.regular.tint(color1.color).interactive())
-                        .buttonStyle(.borderedProminent)
                         .padding(.horizontal)
 
-                        Button("Manually Describe It") {
+                        // ✍️ Manual Mode Button
+                        Button {
                             presentManualMode = true
+                        } label: {
+                            choiceCard(
+                                title: "Manually Describe It",
+                                subtitle: "Type out the description yourself.",
+                                systemImage: "pencil"
+                            )
                         }
-                        .glassEffect(.regular.tint(color1.color).interactive())
-                        .buttonStyle(.borderedProminent)
                         .padding(.horizontal)
+
+                        Spacer()
                     }
-                    .padding(.top)
                 }
+
                 
                 if step == 2 {
                     AddLocationView(placeType: placeType, placeDesc: finalDescription ?? "Description Not Available", previousPlace: previousPlace){ loc in
@@ -153,4 +173,36 @@ struct AddPlaceView: View {
             location: location
         )
     }
+    
+    @ViewBuilder
+    private func choiceCard(title: String, subtitle: String, systemImage: String) -> some View {
+        HStack(alignment: .center, spacing: 16) {
+            Image(systemName: systemImage)
+                .font(.title2)
+                .foregroundColor(.white)
+                .frame(width: 44, height: 44)
+                .background(Color.accentColor)
+                .clipShape(Circle())
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.headline)
+
+                Text(subtitle)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+                .foregroundColor(.gray)
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(Color(.systemGray5))
+        )
+    }
+
 }

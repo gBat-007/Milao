@@ -55,7 +55,7 @@ struct PlacesTab: View {
         }
         .sheet(isPresented: $presentAddPlaceSheet) {
             AddPlaceView(draftPlace: $newPlace, color1: $event.bgColor1, color2: $event.bgColor2, previousPlace: event.places.last)
-                .presentationDetents([.fraction(0.7)])
+                .presentationDetents([.large])
         }
         .onChange(of: newPlace) {
             guard let newPlace else { return }

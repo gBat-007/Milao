@@ -72,38 +72,53 @@ struct SearchLocationView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            Form {
-                Section("Search") {
-                    TextField("Search for a place", text: $searchText)
-                        .onSubmit {
-                            runSearch()
-                        }
-                        .onChange(of: searchText) { _, newValue in
-                            if newValue.isEmpty {
-                                mapItems = []
-                                selectedMapItem = nil
-                                selectedCoordinate = nil
-                                travelInfo = [:]
+            NavigationStack {
+                VStack(spacing: 0) {
+                    // 🔍 Search Bar
+                    HStack {
+                        TextField("Search for a place", text: $searchText)
+                            .textFieldStyle(.roundedBorder)
+                            .onSubmit { runSearch() }
+                            .onChange(of: searchText) { _, newValue in
+                                if newValue.isEmpty {
+                                    mapItems = []
+                                    selectedMapItem = nil
+                                    selectedCoordinate = nil
+                                    travelInfo = [:]
+                                }
                             }
+
+                        if isSearching {
+                            ProgressView()
+                                .scaleEffect(0.7)
+                                .padding(.leading, 4)
                         }
-
-                    if isSearching {
-                        ProgressView("Searching...")
                     }
+                    .padding()
 
-                    if !mapItems.isEmpty {
-                        Section("Results") {
+                    // 📍 Results List
+                    ScrollView {
+                        LazyVGrid(
+                            columns: [
+                                GridItem(.adaptive(minimum: 160), spacing: 12)
+                            ],
+                            spacing: 12
+                        ) {
                             ForEach(mapItems, id: \.self) { item in
                                 Button {
                                     selectMapItem(item)
                                 } label: {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text(item.name ?? "Unnamed Location").bold()
+                                    VStack(alignment: .leading, spacing: 6) {
+                                        Text(item.name ?? "Unnamed Location")
+                                            .font(.headline)
+                                            .lineLimit(2)
+                                            .multilineTextAlignment(.leading)
+
                                         if let address = item.placemark.title {
                                             Text(address)
                                                 .font(.subheadline)
-                                                .foregroundColor(.gray)
+                                                .foregroundColor(.secondary)
+                                                .lineLimit(2)
                                         }
 
                                         if let info = travelInfo[item] {
@@ -115,41 +130,52 @@ struct SearchLocationView: View {
                                         } else {
                                             ProgressView()
                                                 .scaleEffect(0.6)
+                                                .padding(.top, 2)
                                         }
                                     }
-                                    .padding(.vertical, 4)
+                                    .padding()
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .fill(Color(.systemGray6))
+                                    )
                                 }
+                                .buttonStyle(.plain)
                             }
                         }
+                        .padding(.horizontal)
+                        .padding(.top, 8)
                     }
-                }
 
-                if let coord = selectedCoordinate {
-                    Map {
-                        Marker("Selected", coordinate: coord)
-                    }
-                    .frame(height: 200)
-                    .cornerRadius(10)
-                }
-            }
-            .navigationTitle("Pick a Location")
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Select") {
-                        if let mapItem = selectedMapItem {
-                            onLocationSelected(mapItem)
-                            dismiss()
+                    // 🗺️ Map Preview
+                    if let coord = selectedCoordinate {
+                        Map {
+                            Marker("Selected", coordinate: coord)
                         }
+                        .frame(height: 180)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .padding()
                     }
-                    .disabled(selectedMapItem == nil)
                 }
+                .navigationTitle("Pick a Location")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Select") {
+                            if let mapItem = selectedMapItem {
+                                onLocationSelected(mapItem)
+                                dismiss()
+                            }
+                        }
+                        .disabled(selectedMapItem == nil)
+                    }
 
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") { dismiss() }
+                    }
                 }
             }
         }
-    }
 
     private func runSearch() {
         guard !searchText.isEmpty else { return }

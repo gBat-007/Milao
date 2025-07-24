@@ -98,7 +98,7 @@ struct Event: Identifiable, Codable, Hashable, Equatable {
     // MARK: - Static Helpers
 
     static func generateInviteCode(length: Int = 6) -> String {
-        let characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+        let characters = "abcdefghijklmnopqrstuvwxyz"
         return String((0..<length).compactMap { _ in characters.randomElement() })
     }
 }

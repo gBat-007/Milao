@@ -1,10 +1,3 @@
-//
-//  ManualDescriptionView.swift
-//  Milao
-//
-//  Created by Gautam Bansal on 23/07/25.
-//
-
 import SwiftUI
 
 struct ManualDescriptionView: View {
@@ -16,33 +9,62 @@ struct ManualDescriptionView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 20) {
-                Text("Describe the place you're imagining:")
-                    .font(.headline)
-                    .padding(.top)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
 
-                TextEditor(text: $descriptionText)
-                    .frame(height: 200)
-                    .padding()
-                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.gray.opacity(0.3)))
+                    Text("Describe the place you're imagining:")
+                        .font(.title3)
+                        .fontWeight(.semibold)
+                        .padding(.horizontal)
 
-                Button("Done") {
-                    let trimmed = descriptionText.trimmingCharacters(in: .whitespacesAndNewlines)
-                    if !trimmed.isEmpty {
-                        onComplete(trimmed)
-                        dismiss()
+                    Text("Example: An Italian restaurant with vegetarian options including pizza and spinach ravioli")
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+                        .padding(.horizontal)
+                        .padding(.top, -8)
+
+                    ZStack(alignment: .topLeading) {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color(.secondarySystemBackground))
+                            .shadow(radius: 1)
+
+                        TextEditor(text: $descriptionText)
+                            .padding(12)
+                            .frame(minHeight: 200)
+                            .background(Color.clear)
                     }
-                }
-                .disabled(descriptionText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                .glassEffect(.regular.tint(color1.color).interactive())
-                .buttonStyle(.borderedProminent)
+                    .padding(.horizontal)
 
-                Spacer()
+                    Button {
+                        let trimmed = descriptionText.trimmingCharacters(in: .whitespacesAndNewlines)
+                        if !trimmed.isEmpty {
+                            onComplete(trimmed)
+                            dismiss()
+                        }
+                    } label: {
+                        Text("Done")
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(color1.color)
+                                    .opacity(descriptionText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.5 : 1.0)
+                            )
+                            .foregroundColor(.white)
+                            .font(.headline)
+                    }
+                    .disabled(descriptionText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .padding(.horizontal)
+                    .padding(.top, 8)
+
+                    Spacer()
+                }
+                .padding(.top, 24)
             }
-            .padding()
+            .scrollDismissesKeyboard(.interactively)
+            .padding(.bottom, 8)
             .navigationTitle("Describe Place")
             .navigationBarTitleDisplayMode(.inline)
         }
     }
 }
-

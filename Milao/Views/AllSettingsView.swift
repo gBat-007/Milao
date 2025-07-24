@@ -3,6 +3,27 @@ import MapKit
 import Contacts
 import CoreLocation
 
+//extension View {
+//    func scaleEffectOnTap() -> some View {
+//        self.modifier(TapScaleEffect())
+//    }
+//}
+//struct TapScaleEffect: ViewModifier {
+//    @State private var isPressed = false
+//
+//    func body(content: Content) -> some View {
+//        content
+//            .scaleEffect(isPressed ? 0.95 : 1.0)
+//            .animation(.easeOut(duration: 0.15), value: isPressed)
+//            .simultaneousGesture(
+//                DragGesture(minimumDistance: 0)
+//                    .onChanged { _ in isPressed = true }
+//                    .onEnded { _ in isPressed = false }
+//            )
+//    }
+//}
+
+
 struct AllSettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var member: Member
@@ -39,6 +60,7 @@ struct AllSettingsView: View {
                     Button("Edit Your Location") {
                         editLocationSheet = true
                     }
+                    .buttonStyle(.borderedProminent)
                     .sheet(isPresented: $editLocationSheet){
                         NavigationStack {
                             Form {
@@ -71,7 +93,7 @@ struct AllSettingsView: View {
                                     Map {
                                         Marker("Your Location", coordinate: coord)
                                     }
-                                    .frame(height: 200)
+                                    .frame(height: 400)
                                     .cornerRadius(10)
                                 } else {
                                     Text("No location selected")
@@ -128,12 +150,14 @@ struct AllSettingsView: View {
                         }
                     }
                     .disabled(selectedEventID == nil)
+                    .buttonStyle(.borderedProminent)
 
                     // 4. Stop Button - stops all Live Activities
                     Button("Stop All Live Activities") {
                             TimerManager.shared.stopAllLiveActivities()
                     }
                     .tint(.red)
+                    .buttonStyle(.borderedProminent)
                 }
                 
             }
@@ -197,6 +221,7 @@ struct AllSettingsView: View {
         }
     }
 }
+
 import CoreLocation
 import Contacts
 

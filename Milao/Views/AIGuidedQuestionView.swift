@@ -24,30 +24,39 @@ struct AIGuidedQuestionView: View {
         NavigationStack {
             VStack(spacing: 24) {
                 if let q = currentQuestion {
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text(q.question ?? "Loading...")
-                            .fontDesign(.rounded)
-                            .multilineTextAlignment(.leading)
-                            .lineLimit(nil)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .transition(.opacity)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal)
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 24) {
+                            // Question
+                            Text(q.question ?? "Loading...")
+                                .font(.title3.weight(.semibold))
+                                .multilineTextAlignment(.leading)
+                                .padding(.top, 24)
+                                .padding(.horizontal)
+                                .transition(.opacity)
 
-                        ForEach(q.options ?? [], id: \.self) { option in
-                            Button(action: {
-                                Task {
-                                    answers[q.question ?? ""] = option
-                                    await askNext()
+                            // Options
+                            VStack(spacing: 16) {
+                                ForEach(q.options ?? [], id: \.self) { option in
+                                    Button(action: {
+                                        Task {
+                                            answers[q.question ?? ""] = option
+                                            await askNext()
+                                        }
+                                    }) {
+                                        Text(option)
+                                            .font(.body.weight(.medium))
+                                            .frame(maxWidth: .infinity, minHeight: 50)
+                                    }
+                                    .glassEffect(.regular.tint(color1.color).interactive())
+                                    .buttonStyle(.borderedProminent)
+                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                                    .padding(.horizontal, 20)
                                 }
-                            }) {
-                                Text(option)
-                                    .frame(maxWidth: .infinity)
                             }
-                            .glassEffect(.regular.tint(color1.color).interactive())
-                            .buttonStyle(.borderedProminent)
-                            .padding(.horizontal)
+
+                            Spacer(minLength: 60)
                         }
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
 
                 } else if isThinking {
