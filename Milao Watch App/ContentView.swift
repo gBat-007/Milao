@@ -23,9 +23,9 @@ struct WatchContentView: View {
                 List(session.events) { event in
                     NavigationLink(destination: WatchEventDetailView(event: event)) {
                         WatchEventRow(event: event)
-                            .padding(5)
+                            .padding(0)
                             .background(
-                                RoundedRectangle(cornerRadius: 5, style: .continuous)
+                                RoundedRectangle(cornerRadius: 10, style: .continuous)
                                     .fill(LinearGradient(
                                         colors: [event.bgColor1.color, event.bgColor2.color],
                                         startPoint: .topLeading,
@@ -33,22 +33,21 @@ struct WatchContentView: View {
                                     ))
                             )
                             .overlay(
-                                RoundedRectangle(cornerRadius: 25)
-                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                                RoundedRectangle(cornerRadius: 10)
+                                    .stroke(Color.white.opacity(0.2), lineWidth: 2)
                             )
-                            .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 5)
-                            .blur(radius: 0.3) // small blur for softness
+//                            .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 5)
+//                            .blur(radius: 0.3) // small blur for softness
                             .padding(.vertical, 2)
                     }
                 }
-                .navigationTitle("Events")
-            Button("Refresh Events") {
-                WatchSessionManager.shared.requestEvents()
             }
-        }
         .onAppear {
             print("👀 WatchContentView appeared — requesting events")
             WatchSessionManager.shared.requestEvents()
+        }
+            Button("Refresh Events") {
+                WatchSessionManager.shared.requestEvents()
         }
     }
 }
@@ -59,10 +58,9 @@ struct WatchEventRow: View {
     @State var subTextColor: Color = .gray
     var body: some View {
         VStack(spacing: 30) {
-            HStack(alignment: .top, spacing: 16) {
+            HStack(alignment: .center, spacing: 16) {
                 Text(event.emoji)
                     .font(.title)
-                    .padding(.top, 4)
                 Text(event.title)
                     .font(.headline)
                     .foregroundColor(textColor)

@@ -152,21 +152,24 @@ struct AIGuidedQuestionView: View {
             let prompt = step >= 5
             ? """
             The user is looking for a \(placeType) in \(locationName).
-            They’ve already answered: \(answers).
+            They've already answered: \(answers).
             Summarize the type of place the user wants based on the current answers (description only). Do NOT give an exact location or specific place, just the requirements & preferences should be summarised. Do NOT generate 'question' or options; leave them fully empty.
             """
             : """
             The user is looking for a \(placeType) in \(locationName).
-            They’ve already answered: \(answers).
+            They've already answered: \(answers).
             - Ask one more highly relevant question to clarify preferences (question + options), OR
             - Summarize the type of place based on the current answers (description only).
             Never mix the two. Do NOT generate 'question' and 'options' if not necessary or if 7 questions have been asked.
             """
 
-            let stream = session.streamResponse(to: prompt, generating: PlaceQuestion.self)
+            // Fixed: Correct streamResponse syntax
+            let stream = try await session.streamResponse(generating: PlaceQuestion.self) {
+                prompt
+            }
 
             for try await partial in stream {
-                self.currentQuestion = partial
+                self.currentQuestion = partial.content  // Extract content from Snapshot
             }
 
             guard let response = currentQuestion else {
@@ -197,4 +200,5 @@ struct AIGuidedQuestionView: View {
 
         step += 1
     }
+
 }

@@ -4,8 +4,8 @@ import MapKit
 
 func calculateETA(from source: CLLocationCoordinate2D, to destination: CLLocationCoordinate2D) async throws -> TimeInterval {
     let request = MKDirections.Request()
-    request.source = MKMapItem(placemark: MKPlacemark(coordinate: source))
-    request.destination = MKMapItem(placemark: MKPlacemark(coordinate: destination))
+    request.source = MKMapItem(location: CLLocation(latitude: source.latitude, longitude: source.longitude), address: nil)
+    request.destination = MKMapItem(location: CLLocation(latitude: destination.latitude, longitude: destination.longitude), address: nil)
     request.transportType = .automobile
 
     let directions = MKDirections(request: request)
@@ -14,8 +14,12 @@ func calculateETA(from source: CLLocationCoordinate2D, to destination: CLLocatio
 }
 
 struct LocationSearchTool: Tool {
+    
     let name: String = "searchNearbyLocations"
     let description: String = "Search nearby locations using a query and coordinates."
+
+    typealias ParameterType = Arguments
+    typealias ResultType = String
 
     @Generable
     struct Arguments: Codable {
@@ -47,7 +51,7 @@ struct LocationSearchTool: Tool {
         let etaSeconds: TimeInterval
     }
 
-    func call(arguments: Arguments) async throws -> ToolOutput {
+    func call(arguments: Arguments) async throws -> String {
         let sourceCoord = CLLocationCoordinate2D(latitude: arguments.latitude, longitude: arguments.longitude)
 
         let request = MKLocalSearch.Request()
@@ -64,8 +68,9 @@ struct LocationSearchTool: Tool {
 
         for item in response.mapItems.prefix(5) {
             let name = item.name ?? "Unknown"
-            let subtitle = item.placemark.title ?? "Unknown"
-            let coord = item.placemark.coordinate
+            // Fixed: Use shortAddress or fullAddress from MKAddress
+            let subtitle = item.address?.shortAddress ?? "Unknown"
+            let coord = item.location.coordinate
 
             let eta = try await calculateETA(from: sourceCoord, to: coord)
 
@@ -79,6 +84,16 @@ struct LocationSearchTool: Tool {
             results.append(result)
         }
 
-        return ToolOutput(GeneratedContent(results))
+        let formattedResults = results.map { result in
+            """
+            Name: \(result.name)
+            Address: \(result.subtitle)
+            Coordinates: (\(result.latitude), \(result.longitude))
+            ETA: \(Int(result.etaSeconds / 60)) minutes
+            """
+        }.joined(separator: "\n\n")
+        
+        return formattedResults.isEmpty ? "No locations found." : formattedResults
     }
 }
+
