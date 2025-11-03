@@ -2,6 +2,23 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.838988061822-sq8av7d4vp3jv1ltd1age41nb78ooe90</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+		</dict>
+	</array>
+	<key>GIDClientID</key>
+	<string>838988061822-sq8av7d4vp3jv1ltd1age41nb78ooe90.apps.googleusercontent.com</string>
 	<key>NSAlarmKitUsageDescription</key>
 	<string>We will use AlarmKit to showcase alarms for events</string>
 </dict>

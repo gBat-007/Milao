@@ -2,6 +2,7 @@ import SwiftUI
 import FoundationModels
 import Foundation
 
+
 struct AIGuidedQuestionView: View {
     var placeType: String
     var color1: CodableColor
@@ -169,7 +170,7 @@ struct AIGuidedQuestionView: View {
             }
 
             for try await partial in stream {
-                self.currentQuestion = partial.content  // Extract content from Snapshot
+                self.currentQuestion = partial.content
             }
 
             guard let response = currentQuestion else {
