@@ -76,5 +76,21 @@ class TimerManager {
             }
         }
     }
+    
+    func updateSimpleTimer(to widgetEvent: WidgetEvent) {
+        Task {
+            for activity in Activity<TimerAttributes>.activities {
+                let updatedState = TimerAttributes.ContentState(
+                    startTime: Date(),
+                    endTime: widgetEvent.eventDate,
+                    emoji: widgetEvent.emoji,
+                    title: widgetEvent.title
+                )
+                await activity.update(using: updatedState)
+                print("🔄 Live Activity updated")
+                print(updatedState.title)
+            }
+        }
+    }
 }
 

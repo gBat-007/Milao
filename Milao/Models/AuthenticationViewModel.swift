@@ -20,7 +20,7 @@ enum AuthenticationState {
 
 enum AuthenticationFlow {
     case login
-    case signup
+    case signUp
 }
 
 @MainActor
@@ -32,10 +32,61 @@ class AuthenticationViewModel: ObservableObject {
     @Published var user: User?
     @Published var errorMessage: String = ""
     @Published var displayName: String = ""
+    
+    init() {
+        registerAuthStateHandler()
+    }
+    
+    private var authStateHandle: AuthStateDidChangeListenerHandle?
+    
+    func registerAuthStateHandler(){
+        if authStateHandle == nil {
+            authStateHandle = Auth.auth().addStateDidChangeListener { auth, user in
+                self.user = user
+                self.authenticationState = user == nil ? .unauthenticated : .authenticated
+                self.displayName = user?.displayName ?? "(unknown)"
+            }
+        }
+    }
+    
+    
+    private func wait() async {
+        do {
+            print("Wait")
+            try await Task.sleep(nanoseconds: 1_000_000_000)
+            print("Done")
+        }
+        catch { }
+    }
+    
+    func reset(){
+        flow = .login
+    }
 }
 
 extension AuthenticationViewModel {
-//    func signOut
+    func signOut(){
+        do {
+            try Auth.auth().signOut()
+        } catch {
+            print(error)
+            errorMessage = error.localizedDescription
+        }
+    }
+    
+    func deleteAccount() async -> Bool {
+        do {
+            try await user?.delete()
+            return true
+        } catch {
+            errorMessage = error.localizedDescription
+            return false
+        }
+    }
+}
+
+enum AuthenticationError: Error {
+    case tokenError(message: String)
 }
 
 extension AuthenticationViewModel {
@@ -58,12 +109,13 @@ extension AuthenticationViewModel {
             let accessToken = user.accessToken
             let credential = GoogleAuthProvider.credential(withIDToken: idToken.tokenString, accessToken: accessToken.tokenString)
             let result = try await Auth.auth().signIn(with: credential)
+            let firebaseUser = result.user
+            print("User \(firebaseUser.uid) signed in with email \(firebaseUser.email ?? "unknown")")
             return true
         } catch {
             print(error.localizedDescription)
             errorMessage = error.localizedDescription
             return false
         }
-        return false
     }
 }

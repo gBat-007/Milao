@@ -8,7 +8,6 @@ struct OnboardingView: View {
     @State private var selectedPlaceID: String? = nil
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
-    @EnvironmentObject var viewModel: AuthenticationViewModel
     @StateObject private var completerDelegate = SearchCompleterDelegate()
     private let searchCompleter = MKLocalSearchCompleter()
     
@@ -17,21 +16,7 @@ struct OnboardingView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section(header: Text("Welcome!")) {
-                    TextField("Your Name", text: $name)
-                    
-                    Button(action: {}){
-                        Text("Sign in with Google")
-                            .foregroundColor(colorScheme = .dark ? .white : .black)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 8)
-                            .background(alignment: .leading) {
-                                Image("Google")
-                                    .frame(width: 30, alignment: .center)
-                            }
-                    }
-                    .buttonStyle(.bordered)
-                }
+                Section(header: Text("Welcome!")) { }
                 
 
                 Section(header: Text("Search Your Location")) {

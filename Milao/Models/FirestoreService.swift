@@ -2,28 +2,6 @@ import FirebaseDatabase
 import Foundation
 import UIKit
 
-extension Encodable {
-    func toDictionary() throws -> [String: Any] {
-        let data = try JSONEncoder().encode(self)
-        let dict = try JSONSerialization.jsonObject(with: data, options: [])
-        guard let result = dict as? [String: Any] else {
-            throw NSError(domain: "SerializationError", code: 0)
-        }
-        return result
-    }
-}
-
-func convertToFirebaseDict<T: Encodable>(_ object: T) throws -> [String: Any] {
-    let data = try JSONEncoder().encode(object)
-    let jsonObject = try JSONSerialization.jsonObject(with: data)
-    
-    guard let dict = jsonObject as? [String: Any] else {
-        throw NSError(domain: "Milao", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to convert to dictionary"])
-    }
-    
-    return dict
-}
-
 func saveEventRDB(_ event: Event, completion: @escaping (Result<Event, Error>) -> Void) {
     let ref = Database.database().reference()
     let id = event.id
@@ -48,8 +26,11 @@ func saveEventRDB(_ event: Event, completion: @escaping (Result<Event, Error>) -
 //        ]
 //    }
     if eventToSave.chats.isEmpty {
-        eventToSave.chats = [Chat(title: "General", emoji: "💬", messages: [Message(text: "Welcome to the general chat.", isSentByMemberName: "Admin")])]
+        eventToSave.chats = [
+            Chat(title: "General", emoji: "💬", messages: [Message(text: "Welcome to the general chat.", isSentByMemberName: "Admin")])
+        ]
     }
+    
     do {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
