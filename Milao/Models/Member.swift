@@ -19,7 +19,7 @@ struct Member: Codable, Identifiable, Equatable, Hashable {
     }
     
     /// Initialize from Firebase Auth user (for creating new users)
-    init(from user: User, locationPlaceID: String = "0.0,0.0") {
+    init(from user: User, locationPlaceID: String = "47.6,-122.3") {
         self.id = user.uid
         self.name = user.displayName ?? "Unknown User"
         self.locationPlaceID = locationPlaceID

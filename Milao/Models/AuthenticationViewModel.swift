@@ -76,7 +76,9 @@ extension AuthenticationViewModel {
     
     func deleteAccount() async -> Bool {
         do {
+            UserDefaults.standard.removeObject(forKey: "userID")
             try await user?.delete()
+            try Auth.auth().signOut()
             return true
         } catch {
             errorMessage = error.localizedDescription

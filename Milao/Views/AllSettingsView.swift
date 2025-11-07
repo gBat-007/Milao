@@ -129,9 +129,9 @@ struct AllSettingsView: View {
                 
                 Section("Live Activities") {
                     // 1. Create a sorted list of upcoming events
-                    let upcomingEvents = events
-                        .filter { $0.eventDate > Date() }
-                        .sorted(by: { $0.eventDate < $1.eventDate })
+//                    let upcomingEvents = events
+//                        .filter { $0.eventDate > Date() }
+//                        .sorted(by: { $0.eventDate < $1.eventDate })
 
                     // 2. Picker to select an event by title
                     Picker("Choose Event", selection: $selectedEventID) {
@@ -277,29 +277,29 @@ struct AllSettingsView: View {
 //import CoreLocation
 //import Contacts
 //
-//func getReverseGeocode(coord: CLLocationCoordinate2D, completion: @escaping (String?) -> Void) {
-//    let geocoder = CLGeocoder()
-//    let location = CLLocation(latitude: coord.latitude, longitude: coord.longitude)
-//    
-//    geocoder.reverseGeocodeLocation(location) { placemarks, error in
-//        guard let placemark = placemarks?.first, error == nil else {
-//            completion(nil)
-//            return
-//        }
-//
-//        if let postalAddr = placemark.postalAddress {
-//            let formatted = CNPostalAddressFormatter.string(from: postalAddr, style: .mailingAddress)
-//            completion(formatted)
-//        } else {
-//            let parts = [
-//                placemark.name,
-//                placemark.thoroughfare,
-//                placemark.locality,
-//                placemark.administrativeArea,
-//                placemark.country
-//            ]
-//            completion(parts.compactMap { $0 }.joined(separator: ", "))
-//        }
-//    }
-//}
+func getReverseGeocode(coord: CLLocationCoordinate2D, completion: @escaping (String?) -> Void) {
+    let geocoder = CLGeocoder()
+    let location = CLLocation(latitude: coord.latitude, longitude: coord.longitude)
+    
+    geocoder.reverseGeocodeLocation(location) { placemarks, error in
+        guard let placemark = placemarks?.first, error == nil else {
+            completion(nil)
+            return
+        }
+
+        if let postalAddr = placemark.postalAddress {
+            let formatted = CNPostalAddressFormatter.string(from: postalAddr, style: .mailingAddress)
+            completion(formatted)
+        } else {
+            let parts = [
+                placemark.name,
+                placemark.thoroughfare,
+                placemark.locality,
+                placemark.administrativeArea,
+                placemark.country
+            ]
+            completion(parts.compactMap { $0 }.joined(separator: ", "))
+        }
+    }
+}
 //

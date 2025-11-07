@@ -1,5 +1,7 @@
 import SwiftUI
 internal import Combine
+import FirebaseDatabase
+import FirebaseAuth
 
 struct LoginView: View {
   @EnvironmentObject var viewModel: AuthenticationViewModel
@@ -11,7 +13,11 @@ struct LoginView: View {
       if await viewModel.signInWithGoogle() == true {
 //        var locationManager = LocationManager()
 //        locationManager.requestAuthorization()
-        dismiss()
+          let ref = Database.database().reference()
+          do {try await ref.child("users").child(viewModel.user!.uid).setValue(Member(from: viewModel.user!).toFirebaseDict())}
+          catch {print(error.localizedDescription)}
+          UserDefaults.standard.set(viewModel.user!.uid, forKey: "userID")
+          dismiss()
       }
     }
   }

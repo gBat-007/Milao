@@ -17,7 +17,7 @@ struct EventsView: View {
                 Tab("Members", systemImage: "person.3.fill", value: 0) {
                     MembersTab(event: $event,
                                presentAddMemberSheet: $presentAddMemberSheet,
-                               inviteCode: event.inviteCode)
+                               inviteCode: event.id)
                     .tint(event.bgColor2.resolved(for: colorScheme))
                 }
 

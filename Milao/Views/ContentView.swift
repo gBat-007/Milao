@@ -121,7 +121,7 @@ struct ContentView: View {
         }
         .onAppear {
 //            showOnboarding = true
-            showOnboarding = !hasLaunchedBefore
+//            showOnboarding = !hasLaunchedBefore
             
             let widgets = events.map { $0.asWidgetEvent }
             WidgetEventStore.shared.widgetEvents = widgets

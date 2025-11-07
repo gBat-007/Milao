@@ -93,6 +93,45 @@ struct Event: Identifiable, Codable, Hashable, Equatable {
         self.ownerID = ownerID
     }
 
+    // MARK: - Codable customization to default missing members to []
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case title
+        case emoji
+        case members
+        case chats
+        case places
+        case eventDate
+        case bgColor1
+        case bgColor2
+        case ownerID
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        // id in DB is the invite code key; we still decode if present, but it will be overwritten by caller
+        self.id = try container.decodeIfPresent(String.self, forKey: .id) ?? ""
+
+        self.title = try container.decode(String.self, forKey: .title)
+        self.emoji = try container.decode(String.self, forKey: .emoji)
+
+        // Default missing members to []
+        self.members = try container.decodeIfPresent([Member].self, forKey: .members) ?? []
+
+        // Leave chats/places as-is (synthesized behavior); they must exist in your data
+        self.chats = try container.decode([Chat].self, forKey: .chats)
+        self.places = try container.decode([Place].self, forKey: .places)
+
+        self.eventDate = try container.decode(Date.self, forKey: .eventDate)
+        self.bgColor1 = try container.decode(CodableColor.self, forKey: .bgColor1)
+        self.bgColor2 = try container.decode(CodableColor.self, forKey: .bgColor2)
+        self.ownerID = try container.decode(String.self, forKey: .ownerID)
+    }
+
+    // We can rely on synthesized encode(to:) since CodingKeys is defined and matches properties.
+    // No custom encode needed.
+
     // MARK: - Static Helpers
 
     static func generateInviteCode(length: Int = 6) -> String {

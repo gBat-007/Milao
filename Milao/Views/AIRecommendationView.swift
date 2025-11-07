@@ -103,11 +103,12 @@ Return: name, description, coordinates, and ETA.
 
             )
             
-            guard let member = Member.decode(from: memberData),
-                  let coord = member.coordinate else {
-                errorMessage = "No member location available"
-                return
-            }
+//            guard let member = Member.decode(from: memberData),
+//                  let coord = member.coordinate else {
+//                errorMessage = "No member location available"
+//                return
+//            }
+            let coord = Coordinate(latitude: 0.0, longitude: 0.0)
 
 
                         let prompt = """
