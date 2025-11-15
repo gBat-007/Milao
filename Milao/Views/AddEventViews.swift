@@ -308,7 +308,7 @@ struct JoinEventView: View {
                     }
                     
                     // Step 7: Load and return the complete event
-                    loadEventAndFinish(eventKey: eventKey, eventDict: eventDict)
+                    loadEventAndFinish(eventKey: eventKey, eventDict: eventDict, newMemberID: currentUser.uid)
                 }
             }
         } withCancel: { error in
@@ -317,10 +317,10 @@ struct JoinEventView: View {
         }
         
         // Helper function to load event with hydrated members
-        func loadEventAndFinish(eventKey: String, eventDict: [String: Any]) {
+        func loadEventAndFinish(eventKey: String, eventDict: [String: Any], newMemberID: String) {
             // Get memberIDs from the event
-            let memberIDs = eventDict["memberIDs"] as? [String] ?? []
-            
+            var memberIDs = eventDict["memberIDs"] as? [String] ?? []
+            memberIDs.append(newMemberID)
             // Fetch all members from users collection
             let usersRef = ref.child("users")
             var hydratedMembers: [Member] = []

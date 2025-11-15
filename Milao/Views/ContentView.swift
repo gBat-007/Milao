@@ -95,10 +95,10 @@ struct ContentView: View {
                         let granted = try await AlarmManager.shared.requestAuthorization()
                         if granted == .authorized {
                             print("✅ Alarm permission granted.")
+                            await scheduleAlarm(for: newEvent)
                         } else {
                             print("❌ Alarm permission denied.")
                         }
-                        await scheduleAlarm(for: newEvent)
                     }
                     saveEventRDB(newEvent) { result in
                         if case let .failure(error) = result {
