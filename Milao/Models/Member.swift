@@ -19,7 +19,7 @@ struct Member: Codable, Identifiable, Equatable, Hashable {
     }
     
     /// Initialize from Firebase Auth user (for creating new users)
-    init(from user: User, locationPlaceID: String = "47.6,-122.3") {
+    init(from user: User, locationPlaceID: String = "37.3346,-122.0090") {
         self.id = user.uid
         self.name = user.displayName ?? "Unknown User"
         self.locationPlaceID = locationPlaceID
@@ -84,3 +84,9 @@ extension Member {
     }
 }
 
+
+func stringToCoordinate(_ str: String) -> Coordinate? {
+    let parts = str.split(separator: ",").compactMap { Double($0.trimmingCharacters(in: .whitespaces)) }
+    guard parts.count == 2 else { return nil }
+    return Coordinate(latitude: parts[0], longitude: parts[1])
+}

@@ -143,7 +143,31 @@ struct Event: Identifiable, Codable, Hashable, Equatable {
 
 extension Event {
     func deleteFromDatabase(completion: ((Result<Void, Error>) -> Void)? = nil) {
+        
+        func removeAnID(_ id: String, from parentRef: DatabaseReference) {
+            parentRef.getData { error, snapshot in
+                guard error == nil else { return }
+
+                // Read as array (Firebase will convert 0,1,2,… keys back to [String])
+                var arr = snapshot?.value as? [String] ?? []
+
+                // Remove the target ID
+                arr.removeAll { $0 == id }
+
+                // Write the updated array back
+                parentRef.setValue(arr)
+            }
+        }
             let ref = Database.database().reference().child("events").child(self.id)
+            ref.child("memberIDs").getData { error, snapshot in
+                guard error == nil else { return }
+                
+                var arr = snapshot?.value as? [String] ?? []
+                
+                for memberID in arr {
+                    removeAnID(self.id ?? "", from: Database.database().reference().child("users").child(memberID).child("eventIDs"))
+                }
+            }
             ref.removeValue { error, _ in
                 if let error = error {
                     completion?(.failure(error))
@@ -167,7 +191,15 @@ extension Event {
                     Member(id: "placeholder", name: "placeholder", locationPlaceID: "0.0,0.0", profilePhotoURL: "placeholder", eventIDs: ["placeholder"])
                 ]
             }
-//            
+            
+            saveEventRDB(eventToSave) { result in
+                if case let .failure(error) = result {
+                    print("❌ Failed to save to Firebase: \(error)")
+                } else {
+                    print("✅ Event saved to Firebase.")
+                }
+            }
+//
 //            let ref = Database.database().reference().child("events").child(eventToSave.id)
 //            let encoder = JSONEncoder()
 //            encoder.dateEncodingStrategy = .iso8601
@@ -244,3 +276,46 @@ extension Event {
         }
 }
 
+// MARK: - Firebase save helper used by Event.saveToDatabase
+func saveEventRDB(_ event: Event, completion: ((Result<Void, Error>) -> Void)? = nil) {
+    let ref = Database.database().reference().child("events").child(event.id)
+    let encoder = JSONEncoder()
+    encoder.dateEncodingStrategy = .iso8601
+
+    do {
+        let data = try encoder.encode(event)
+        guard var dict = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            completion?(.failure(NSError(domain: "EncodingError", code: 0)))
+            return
+        }
+
+        // Ensure color components are Doubles (in case Firebase coerces/needs consistent types)
+        func fixColorComponentTypes(in colorDict: inout [String: Any]) {
+            for key in ["red", "green", "blue", "alpha"] {
+                if let str = colorDict[key] as? String, let dbl = Double(str) {
+                    colorDict[key] = dbl
+                }
+            }
+        }
+
+        if var bgColor1 = dict["bgColor1"] as? [String: Any] {
+            fixColorComponentTypes(in: &bgColor1)
+            dict["bgColor1"] = bgColor1
+        }
+
+        if var bgColor2 = dict["bgColor2"] as? [String: Any] {
+            fixColorComponentTypes(in: &bgColor2)
+            dict["bgColor2"] = bgColor2
+        }
+
+        ref.setValue(dict) { error, _ in
+            if let error = error {
+                completion?(.failure(error))
+            } else {
+                completion?(.success(()))
+            }
+        }
+    } catch {
+        completion?(.failure(error))
+    }
+}

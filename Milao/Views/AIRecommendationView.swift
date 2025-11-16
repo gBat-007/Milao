@@ -1,7 +1,8 @@
 import SwiftUI
 import MapKit
 import FoundationModels
-
+import FirebaseAuth
+import FirebaseDatabase
 @Generable
 struct PossibleLocations {
     @Guide(description: "A list of possible locations")
@@ -30,10 +31,6 @@ struct PossibleLocation {
 }
 
 
-import SwiftUI
-import MapKit
-import FoundationModels
-
 // MARK: - View
 
 struct AIRecommendationView: View {
@@ -44,7 +41,9 @@ struct AIRecommendationView: View {
     @State private var locations: [PossibleLocation] = []
     @State private var isLoading = false
     @State private var errorMessage: String?
-    @AppStorage("memberData") private var memberData: Data?
+    @EnvironmentObject var viewModel: AuthenticationViewModel
+    @AppStorage("memberLocation") var memberLocation: String = "37.3346,-122.0090"
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             if isLoading {
@@ -103,13 +102,7 @@ Return: name, description, coordinates, and ETA.
 
             )
             
-//            guard let member = Member.decode(from: memberData),
-//                  let coord = member.coordinate else {
-//                errorMessage = "No member location available"
-//                return
-//            }
-            let coord = Coordinate(latitude: 0.0, longitude: 0.0)
-
+            let coord = stringToCoordinate(memberLocation) ?? Coordinate(latitude: 37.3346, longitude: -122.0090)
 
                         let prompt = """
             Find 5 real-world places for this theme: "\(placeType)" — "\(placeDesc)".

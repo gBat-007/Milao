@@ -2,6 +2,8 @@ import SwiftUI
 import MapKit
 import Contacts
 import CoreLocation
+import FirebaseDatabase
+import FirebaseAuth
 
 //extension View {
 //    func scaleEffectOnTap() -> some View {
@@ -33,10 +35,13 @@ struct AllSettingsView: View {
 //    @State private var coordinate: CLLocationCoordinate2D?
     @State private var selectedEventID: String?
     @State private var showEventPicker: Bool = false
+    @State private var isUpdating = false
+    @State private var message = "Loading..."
 //    @State private var editLocationSheet: Bool = false
     @EnvironmentObject var viewModel: AuthenticationViewModel
 //    @StateObject private var completerDelegate = SearchCompleterDelegate()
     @State var presentingConfirmationDialog = false
+    @AppStorage("memberLocation") var memberLocation: String = "37.3346,-122.0090"
 //    private let searchCompleter = MKLocalSearchCompleter()
 //    private let geocoder = CLGeocoder()
     
@@ -51,7 +56,45 @@ struct AllSettingsView: View {
     private func signOut() {
         viewModel.signOut()
     }
-
+    
+    func updateLocation(){
+        isUpdating = true
+        message = "Updating..."
+        
+        LocationManager.shared.requestOneTimeLocation { location in
+            DispatchQueue.main.async {
+                isUpdating = false
+                
+                guard let loc = location else {
+                    message = "Unable to get location."
+                    return
+                }
+                
+                memberLocation = String("\(loc.coordinate.latitude),\(loc.coordinate.longitude)")
+                
+                Task {
+                    let ref = Database.database().reference()
+                    do {
+                        try await ref.child("users")
+                            .child(viewModel.user!.uid)
+                            .child("locationPlaceID")
+                            .setValue(String("\(loc.coordinate.latitude),\(loc.coordinate.longitude)"))
+                        
+                        // Option A: Notify the events owner to force refresh its observers/stream.
+                        NotificationCenter.default.post(name: .memberSettingsDidChangeAffectingEvents, object: nil)
+                        
+                    } catch {
+                        print(error.localizedDescription)
+                    }
+                }
+                
+                Task {
+                    let locationName = await resolveExactLocationName(from: stringToCoordinate(memberLocation)?.clLocation)
+                    message = "Location Updated! New Location: \(locationName)"
+                }
+            }
+        }
+    }
     var body: some View {
         NavigationStack {
             Form {
@@ -72,7 +115,21 @@ struct AllSettingsView: View {
                     Button("Cancel", role: .cancel, action: { })
                 }
 
-//                Section("Your Location") {
+                Section("Your Location") {
+                    
+                    Button(action: updateLocation) {
+                        if isUpdating {
+                            ProgressView()
+                        } else {
+                            Text("Update Your Location")
+                        }
+                    }
+                    
+                    Text(message)
+                        .foregroundColor(.secondary)
+                        .font(.footnote)
+                }
+                
 //                    Button("Edit Your Location") {
 //                        editLocationSheet = true
 //                    }
@@ -180,6 +237,12 @@ struct AllSettingsView: View {
                     Button("Cancel") { dismiss() }
                 }
             }
+            .onAppear {
+                Task {
+                    let locationName = await resolveExactLocationName(from: stringToCoordinate(memberLocation)?.clLocation)
+                    message = "Home Location: \(locationName)"
+                }
+            }
 //            .onAppear {
 //                searchCompleter.delegate = completerDelegate
 //
@@ -280,26 +343,87 @@ struct AllSettingsView: View {
 func getReverseGeocode(coord: CLLocationCoordinate2D, completion: @escaping (String?) -> Void) {
     let geocoder = CLGeocoder()
     let location = CLLocation(latitude: coord.latitude, longitude: coord.longitude)
-    
+
+    func finishOnMain(_ value: String?) {
+        if Thread.isMainThread {
+            completion(value)
+        } else {
+            DispatchQueue.main.async { completion(value) }
+        }
+    }
+
+    func searchNearestLandmark() {
+        let region = MKCoordinateRegion(center: coord,
+                                        latitudinalMeters: 1000,
+                                        longitudinalMeters: 1000)
+        let request = MKLocalSearch.Request()
+        request.naturalLanguageQuery = nil // broad POI search
+        request.region = region
+
+        let search = MKLocalSearch(request: request)
+        search.start { response, error in
+            guard let items = response?.mapItems, error == nil else {
+                finishOnMain(nil)
+                return
+            }
+
+            // Sort by distance to the coordinate
+            let sorted = items.sorted {
+                guard let l0 = $0.placemark.location?.distance(from: location),
+                      let l1 = $1.placemark.location?.distance(from: location) else { return false }
+                return l0 < l1
+            }
+
+            if let best = sorted.first, let title = best.name, !title.isEmpty {
+                let subtitle = best.placemark.title ?? best.placemark.subtitle
+                if let sub = subtitle, !sub.isEmpty {
+                    finishOnMain("\(title), \(sub)")
+                } else {
+                    finishOnMain(title)
+                }
+            } else {
+                finishOnMain(nil)
+            }
+        }
+    }
+
     geocoder.reverseGeocodeLocation(location) { placemarks, error in
         guard let placemark = placemarks?.first, error == nil else {
-            completion(nil)
+            searchNearestLandmark()
             return
         }
 
+        // If we have a postal address, prefer it.
         if let postalAddr = placemark.postalAddress {
             let formatted = CNPostalAddressFormatter.string(from: postalAddr, style: .mailingAddress)
-            completion(formatted)
+            finishOnMain(formatted)
+            return
+        }
+
+        // Extract components we care about
+        let name = placemark.name?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let street = placemark.thoroughfare?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let subStreet = placemark.subThoroughfare?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let locality = placemark.locality?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let admin = placemark.administrativeArea?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let country = placemark.country?.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // Determine if result is only locality-level (no street/name)
+        let hasStreetLevel = (street?.isEmpty == false) || (subStreet?.isEmpty == false)
+
+        if hasStreetLevel {
+            let parts = [name, street, locality, admin, country]
+            let formatted = parts.compactMap { $0 }.joined(separator: ", ")
+            finishOnMain(formatted.isEmpty ? nil : formatted)
         } else {
-            let parts = [
-                placemark.name,
-                placemark.thoroughfare,
-                placemark.locality,
-                placemark.administrativeArea,
-                placemark.country
-            ]
-            completion(parts.compactMap { $0 }.joined(separator: ", "))
+            // Only city-level: fallback to MKLocalSearch
+            searchNearestLandmark()
         }
     }
 }
-//
+
+extension Notification.Name {
+    // Posted after AllSettingsView successfully writes the user's location to /users/<uid>/locationPlaceID.
+    // The events owner should observe this and force-refresh its events stream (remove observers and re-attach).
+    static let memberSettingsDidChangeAffectingEvents = Notification.Name("memberSettingsDidChangeAffectingEvents")
+}

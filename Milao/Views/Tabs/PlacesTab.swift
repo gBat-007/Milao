@@ -6,6 +6,7 @@ struct PlacesTab: View {
     @Binding var presentAddPlaceSheet: Bool
     @State private var newPlace: Place?
     @State private var showingMapSheet = false
+    @EnvironmentObject var viewModel: AuthenticationViewModel
     var body: some View {
         VStack {
             if event.places.isEmpty {

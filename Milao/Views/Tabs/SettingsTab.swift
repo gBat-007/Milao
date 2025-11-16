@@ -4,7 +4,7 @@ struct SettingsTab: View {
     @Binding var event: Event
     @State var primaryClr: Color = Color.blue
     @State var secondaryClr: Color = Color.green
-    
+    @EnvironmentObject var viewModel: AuthenticationViewModel
     var body: some View {
         
         Form {

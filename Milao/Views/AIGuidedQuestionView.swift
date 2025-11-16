@@ -15,8 +15,10 @@ struct AIGuidedQuestionView: View {
     @State private var isThinking = false
     @State private var step = 0
     @State private var errorMessage: String?
+    
+    @EnvironmentObject var viewModel: AuthenticationViewModel
+    @AppStorage("memberLocation") var memberLocation: String = "37.3346,-122.0090"
 
-    @AppStorage("memberData") private var memberData: Data?
     @Environment(\.dismiss) private var dismiss
 
     @State private var locationName: String = ""
@@ -94,13 +96,8 @@ struct AIGuidedQuestionView: View {
             emoji = ""
             isThinking = true
             errorMessage = nil
-
-            guard let member = try? JSONDecoder().decode(Member.self, from: memberData ?? Data()) else {
-                errorMessage = "Couldn't load your member info."
-                return
-            }
-
-            locationName = await resolveLocationName(from: member.coordinate)
+            
+            locationName = await resolveLocationName(from: stringToCoordinate(memberLocation)?.clLocation)
 
             let emojiSession = LanguageModelSession(instructions: "Generate a single character that is an emoji.")
             let emojiResponse = try await emojiSession.respond(

@@ -9,9 +9,11 @@ import SwiftUI
 
 import MapKit
 import CoreLocation
+import FirebaseAuth
 
 struct MembersTab: View {
     @Binding var event: Event
+    @EnvironmentObject var viewModel: AuthenticationViewModel
     @Binding var presentAddMemberSheet: Bool
     let inviteCode: String
     var body: some View {
@@ -20,6 +22,7 @@ struct MembersTab: View {
                 ForEach(event.members.indices, id: \.self) { index in
                     MemberRow(member: $event.members[index])
                         .padding(.vertical, 4)
+                        .bold(event.members[index].id == viewModel.user?.uid)
                 }
             }
             .listStyle(.insetGrouped)
@@ -45,6 +48,7 @@ struct MemberRow: View {
                     ProgressView()
                 }
                 .frame(width: 50, height: 50)
+                .clipShape(RoundedRectangle(cornerRadius: 7))
                 
                 VStack(alignment: .leading, spacing: 6) {
                     Text(member.name)
@@ -77,7 +81,6 @@ struct MemberRow: View {
             }
         }
     }
-    
 }
 
 struct AddMemberView: View {

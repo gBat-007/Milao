@@ -75,7 +75,20 @@ func saveEventRDB(_ event: Event, completion: @escaping (Result<Event, Error>) -
                 completion(.success(event))
             }
         }
-
+        
+        for memberId in memberIDs {
+            ref.child("users").child(memberId).child("eventIDs").getData { error, snapshot in
+                guard error == nil else { return }
+                
+                var arr = snapshot?.value as? [String] ?? []
+                
+                if !arr.contains(id) {
+                    arr.append(id)
+                    ref.child("users").child(memberId).child("eventIDs").setValue(arr)
+                }
+            }
+        }
+        
     } catch {
         completion(.failure(error))
     }

@@ -10,6 +10,7 @@ import FirebaseCore
 import FirebaseAuth
 import GoogleSignIn
 import GoogleSignInSwift
+import FirebaseDatabase
 internal import Combine
 
 enum AuthenticationState {
@@ -64,20 +65,50 @@ class AuthenticationViewModel: ObservableObject {
     }
 }
 
+func removeID(_ id: String, from parentRef: DatabaseReference) {
+    parentRef.getData { error, snapshot in
+        guard error == nil else { return }
+
+        // Read as array (Firebase will convert 0,1,2,… keys back to [String])
+        var arr = snapshot?.value as? [String] ?? []
+
+        // Remove the target ID
+        arr.removeAll { $0 == id }
+
+        // Write the updated array back
+        parentRef.setValue(arr)
+    }
+}
+
 extension AuthenticationViewModel {
     func signOut(){
         do {
+            UserDefaults.standard.removeObject(forKey: "userID")
+            UserDefaults.standard.removeObject(forKey: "memberLocation")
             try Auth.auth().signOut()
         } catch {
             print(error)
             errorMessage = error.localizedDescription
         }
     }
-    
     func deleteAccount() async -> Bool {
         do {
-            UserDefaults.standard.removeObject(forKey: "userID")
-            try await user?.delete()
+            Task {
+                let ref = Database.database().reference()
+                ref.child("users").child(user?.uid ?? "").child("eventIDs").getData { error, snapshot in
+                    guard error == nil else { return }
+                    
+                    var arr = snapshot?.value as? [String] ?? []
+                    
+                    for eventId in arr {
+                        removeID(self.user?.uid ?? "", from: ref.child("events").child(eventId).child("memberIDs"))
+                    }
+                }
+                try await ref.child("users").child(user?.uid ?? "").removeValue()
+                try await user?.delete()
+                UserDefaults.standard.removeObject(forKey: "userID")
+                UserDefaults.standard.removeObject(forKey: "memberLocation")
+            }
             try Auth.auth().signOut()
             return true
         } catch {

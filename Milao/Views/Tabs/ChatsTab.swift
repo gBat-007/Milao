@@ -7,11 +7,12 @@ import UIKit
 //
 import Foundation
 import SwiftUI
+import FirebaseAuth
 
 struct ChatsTab: View {
+    @EnvironmentObject var viewModel: AuthenticationViewModel
     @Binding var event: Event
     @Binding var presentAddChatSheet: Bool
-    @AppStorage("memberData") var memberData: Data?
     @State var currentMemberName: String = ""
     @State var newMessage: String = ""
     @State private var showGeneralAlert = false
@@ -39,7 +40,7 @@ struct ChatsTab: View {
                 }
                 .onDelete(perform: deleteChat)
                 .onAppear {
-                    currentMemberName = /*Member.decode(from: memberData)?.name ??*/ "Unknown Name"
+                    currentMemberName = viewModel.displayName
                     
                     NotificationCenter.default.addObserver(forName: .didSendMessage, object: nil, queue: .main) { _ in
                         event.saveToDatabase()
@@ -50,7 +51,7 @@ struct ChatsTab: View {
                 }
             }
             .onAppear {
-                currentMemberName = /*Member.decode(from: memberData)?.name ??*/ "Unknown Name"
+                currentMemberName = viewModel.displayName
             }
             .onChange(of: newMessage) {
                 event.saveToDatabase()
