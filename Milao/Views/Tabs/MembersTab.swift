@@ -39,9 +39,12 @@ struct MemberRow: View {
     var body: some View {
         VStack(spacing: 30) {
             HStack(alignment: .top, spacing: 16) {
-                Text(String(member.name.prefix(1)))
-                    .font(.system(size: 36))
-                    .padding(.top, 4)
+                AsyncImage(url: URL(string: member.profilePhotoURL!)){ image in
+                    image.resizable()
+                } placeholder: {
+                    ProgressView()
+                }
+                .frame(width: 50, height: 50)
                 
                 VStack(alignment: .leading, spacing: 6) {
                     Text(member.name)
