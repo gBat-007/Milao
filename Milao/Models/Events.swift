@@ -13,7 +13,7 @@ import CoreLocation
 import AlarmKit
 
 struct Event: Identifiable, Codable, Hashable, Equatable {
-    var id: String
+    var id: String //THIS IS THE INVITE CODE
     var title: String
     var emoji: String
     var members: [Member]
@@ -22,8 +22,8 @@ struct Event: Identifiable, Codable, Hashable, Equatable {
     var eventDate: Date
     var bgColor1: CodableColor
     var bgColor2: CodableColor
-    var inviteCode: String
-    var ownerID: String
+    
+    var ownerID: String //Will be a UID this time
     
     var membersNum: Int {
         return members.count
@@ -54,7 +54,7 @@ struct Event: Identifiable, Codable, Hashable, Equatable {
         eventDate: Date,
         inviteCode: String
     ) {
-        self.id = UUID().uuidString
+        self.id = inviteCode
         self.title = title
         self.emoji = emoji ?? "🎉"
         self.members = members
@@ -63,7 +63,6 @@ struct Event: Identifiable, Codable, Hashable, Equatable {
         self.eventDate = eventDate
         self.bgColor1 = CodableColor(color: primaryColor)
         self.bgColor2 = CodableColor(color: secondaryColor)
-        self.inviteCode = inviteCode
         self.ownerID = UIDevice.current.identifierForVendor?.uuidString ?? "unknown-device"
     }
 
@@ -82,7 +81,7 @@ struct Event: Identifiable, Codable, Hashable, Equatable {
         inviteCode: String,
         ownerID: String
     ) {
-        self.id = id
+        self.id = inviteCode
         self.title = title
         self.emoji = emoji
         self.members = members
@@ -91,14 +90,52 @@ struct Event: Identifiable, Codable, Hashable, Equatable {
         self.eventDate = eventDate
         self.bgColor1 = bgColor1
         self.bgColor2 = bgColor2
-        self.inviteCode = inviteCode
         self.ownerID = ownerID
     }
+
+    // MARK: - Codable customization to default missing members to []
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case title
+        case emoji
+        case members
+        case chats
+        case places
+        case eventDate
+        case bgColor1
+        case bgColor2
+        case ownerID
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        // id in DB is the invite code key; we still decode if present, but it will be overwritten by caller
+        self.id = try container.decodeIfPresent(String.self, forKey: .id) ?? ""
+
+        self.title = try container.decode(String.self, forKey: .title)
+        self.emoji = try container.decode(String.self, forKey: .emoji)
+
+        // Default missing members to []
+        self.members = try container.decodeIfPresent([Member].self, forKey: .members) ?? []
+
+        // Leave chats/places as-is (synthesized behavior); they must exist in your data
+        self.chats = try container.decode([Chat].self, forKey: .chats)
+        self.places = try container.decode([Place].self, forKey: .places)
+
+        self.eventDate = try container.decode(Date.self, forKey: .eventDate)
+        self.bgColor1 = try container.decode(CodableColor.self, forKey: .bgColor1)
+        self.bgColor2 = try container.decode(CodableColor.self, forKey: .bgColor2)
+        self.ownerID = try container.decode(String.self, forKey: .ownerID)
+    }
+
+    // We can rely on synthesized encode(to:) since CodingKeys is defined and matches properties.
+    // No custom encode needed.
 
     // MARK: - Static Helpers
 
     static func generateInviteCode(length: Int = 6) -> String {
-        let characters = "abcdefghijklmnopqrstuvwxyz"
+        let characters = "abcdefghijklmnopqrstuvwxyz0123456789"
         return String((0..<length).compactMap { _ in characters.randomElement() })
     }
 }
@@ -106,7 +143,31 @@ struct Event: Identifiable, Codable, Hashable, Equatable {
 
 extension Event {
     func deleteFromDatabase(completion: ((Result<Void, Error>) -> Void)? = nil) {
+        
+        func removeAnID(_ id: String, from parentRef: DatabaseReference) {
+            parentRef.getData { error, snapshot in
+                guard error == nil else { return }
+
+                // Read as array (Firebase will convert 0,1,2,… keys back to [String])
+                var arr = snapshot?.value as? [String] ?? []
+
+                // Remove the target ID
+                arr.removeAll { $0 == id }
+
+                // Write the updated array back
+                parentRef.setValue(arr)
+            }
+        }
             let ref = Database.database().reference().child("events").child(self.id)
+            ref.child("memberIDs").getData { error, snapshot in
+                guard error == nil else { return }
+                
+                var arr = snapshot?.value as? [String] ?? []
+                
+                for memberID in arr {
+                    removeAnID(self.id ?? "", from: Database.database().reference().child("users").child(memberID).child("eventIDs"))
+                }
+            }
             ref.removeValue { error, _ in
                 if let error = error {
                     completion?(.failure(error))
@@ -127,70 +188,65 @@ extension Event {
             }
             if eventToSave.members.isEmpty {
                 eventToSave.members = [
-                    Member(id: "placeholder", name: "placeholder", locationPlaceID: "placeholder")
+                    Member(id: "placeholder", name: "placeholder", locationPlaceID: "0.0,0.0", profilePhotoURL: "placeholder", eventIDs: ["placeholder"])
                 ]
             }
             
-//            if eventToSave.plan.locations.isEmpty {
-//                eventToSave.plan.locations = [
-//                    Location(name: "placeholder", coordinate: Coordinate(latitude: 0.0, longitude: 0.0), ofPlace: Place(id: "placeholder", name: "placeholder", descriptionAI: "placeholder", emoji: "📍"))
-//                ]
-//            }
-
-            let ref = Database.database().reference().child("events").child(eventToSave.id)
-            let encoder = JSONEncoder()
-            encoder.dateEncodingStrategy = .iso8601
-
-            do {
-                let data = try encoder.encode(eventToSave)
-                guard var dict = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-                    completion?(.failure(NSError(domain: "EncodingError", code: 0)))
-                    return
+            saveEventRDB(eventToSave) { result in
+                if case let .failure(error) = result {
+                    print("❌ Failed to save to Firebase: \(error)")
+                } else {
+                    print("✅ Event saved to Firebase.")
                 }
-
-                // Fix color component types (ensure all components are Doubles)
-                func fixColorComponentTypes(in colorDict: inout [String: Any]) {
-                    for key in ["red", "green", "blue", "alpha"] {
-                        if let str = colorDict[key] as? String, let dbl = Double(str) {
-                            colorDict[key] = dbl
-                        }
-                    }
-                }
-
-                if var bgColor1 = dict["bgColor1"] as? [String: Any] {
-                    fixColorComponentTypes(in: &bgColor1)
-                    dict["bgColor1"] = bgColor1
-                }
-
-                if var bgColor2 = dict["bgColor2"] as? [String: Any] {
-                    fixColorComponentTypes(in: &bgColor2)
-                    dict["bgColor2"] = bgColor2
-                }
-
-                // Save updated data to Firebase
-                ref.setValue(dict) { error, _ in
-                    if let error = error {
-                        completion?(.failure(error))
-                    } else {
-                        completion?(.success(()))
-                    }
-                }
-
-            } catch {
-                completion?(.failure(error))
             }
+//
+//            let ref = Database.database().reference().child("events").child(eventToSave.id)
+//            let encoder = JSONEncoder()
+//            encoder.dateEncodingStrategy = .iso8601
+//
+//            do {
+//                let data = try encoder.encode(eventToSave)
+//                guard var dict = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+//                    completion?(.failure(NSError(domain: "EncodingError", code: 0)))
+//                    return
+//                }
+//
+//                // Fix color component types (ensure all components are Doubles)
+//                func fixColorComponentTypes(in colorDict: inout [String: Any]) {
+//                    for key in ["red", "green", "blue", "alpha"] {
+//                        if let str = colorDict[key] as? String, let dbl = Double(str) {
+//                            colorDict[key] = dbl
+//                        }
+//                    }
+//                }
+//
+//                if var bgColor1 = dict["bgColor1"] as? [String: Any] {
+//                    fixColorComponentTypes(in: &bgColor1)
+//                    dict["bgColor1"] = bgColor1
+//                }
+//
+//                if var bgColor2 = dict["bgColor2"] as? [String: Any] {
+//                    fixColorComponentTypes(in: &bgColor2)
+//                    dict["bgColor2"] = bgColor2
+//                }
+//
+//                // Save updated data to Firebase
+//                ref.setValue(dict) { error, _ in
+//                    if let error = error {
+//                        completion?(.failure(error))
+//                    } else {
+//                        completion?(.success(()))
+//                    }
+//                }
+//
+//            } catch {
+//                completion?(.failure(error))
+//            }
         }
     }
 
 
 let myEvents: [Event] = []
-
-
-struct DeviceManager {
-    static var deviceID: String {
-        return UIDevice.current.identifierForVendor?.uuidString ?? "unknown-device"
-    }
-}
 
 extension Event {
     var asWidgetEvent: WidgetEvent {
@@ -205,5 +261,61 @@ extension Event {
             bgColor2: self.bgColor2
         )
     }
+    
+    func newWidgetEvent(event: Event) -> WidgetEvent {
+            WidgetEvent(
+                id: event.id,
+                title: event.title,
+                emoji: event.emoji,
+                eventDate: event.eventDate,
+                memberCount: event.membersNum,
+                placesNum: event.placesNum,
+                bgColor1: event.bgColor1,
+                bgColor2: event.bgColor2
+            )
+        }
 }
 
+// MARK: - Firebase save helper used by Event.saveToDatabase
+func saveEventRDB(_ event: Event, completion: ((Result<Void, Error>) -> Void)? = nil) {
+    let ref = Database.database().reference().child("events").child(event.id)
+    let encoder = JSONEncoder()
+    encoder.dateEncodingStrategy = .iso8601
+
+    do {
+        let data = try encoder.encode(event)
+        guard var dict = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            completion?(.failure(NSError(domain: "EncodingError", code: 0)))
+            return
+        }
+
+        // Ensure color components are Doubles (in case Firebase coerces/needs consistent types)
+        func fixColorComponentTypes(in colorDict: inout [String: Any]) {
+            for key in ["red", "green", "blue", "alpha"] {
+                if let str = colorDict[key] as? String, let dbl = Double(str) {
+                    colorDict[key] = dbl
+                }
+            }
+        }
+
+        if var bgColor1 = dict["bgColor1"] as? [String: Any] {
+            fixColorComponentTypes(in: &bgColor1)
+            dict["bgColor1"] = bgColor1
+        }
+
+        if var bgColor2 = dict["bgColor2"] as? [String: Any] {
+            fixColorComponentTypes(in: &bgColor2)
+            dict["bgColor2"] = bgColor2
+        }
+
+        ref.setValue(dict) { error, _ in
+            if let error = error {
+                completion?(.failure(error))
+            } else {
+                completion?(.success(()))
+            }
+        }
+    } catch {
+        completion?(.failure(error))
+    }
+}

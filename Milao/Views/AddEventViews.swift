@@ -1,13 +1,14 @@
 import Foundation
 import SwiftUI
 import FirebaseDatabase
-
+import FirebaseAuth
 
 
 struct AddEventMenuView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var createMode = false
     @State private var joinMode = false
+    @EnvironmentObject var viewModel: AuthenticationViewModel
 
     var onEventCreatedOrJoined: (Event) -> Void
 
@@ -39,12 +40,14 @@ struct AddEventMenuView: View {
                     onEventCreatedOrJoined(newEvent)
                     dismiss()
                 }
+                .environmentObject(viewModel)
             }
             .sheet(isPresented: $joinMode) {
                 JoinEventView { joinedEvent in
                     onEventCreatedOrJoined(joinedEvent)
                     dismiss()
                 }
+                .environmentObject(viewModel)
             }
         }
     }
@@ -61,6 +64,8 @@ struct CreateEventView: View {
     @State private var inviteCode = Event.generateInviteCode()
     @State private var isSaving = false
     @State private var errorMessage: String?
+    @EnvironmentObject var viewModel: AuthenticationViewModel
+    
     private var dateRange: ClosedRange<Date> {
         let now = Date()
         let oneYearFromNow = Calendar.current.date(byAdding: .year, value: 1, to: now)!
@@ -116,17 +121,10 @@ struct CreateEventView: View {
     private func saveEvent() {
         isSaving = true
         
-        guard let memberData = UserDefaults.standard.data(forKey: "memberData"),
-              let currentMember = try? JSONDecoder().decode(Member.self, from: memberData) else {
-            errorMessage = "Could not load current member."
-            isSaving = false
-            return
-        }
-        
         let event = Event(
             title: title,
             emoji: emoji,
-            members: [currentMember],
+            members: [Member(from: viewModel.user!)],
             primaryColor: primaryColor,
             secondaryColor: secondaryColor,
             eventDate: selectedDateTime,
@@ -151,7 +149,7 @@ struct CreateEventView: View {
 struct InviteCodeTextField: View {
     var placeholder: String
     @Binding var text: String
-    var keyboardType: UIKeyboardType = .alphabet
+    var keyboardType: UIKeyboardType = .default
 
     var body: some View {
         TextField(placeholder, text: $text)
@@ -177,6 +175,7 @@ struct JoinEventView: View {
     @State private var code = ""
     @State private var errorMessage: String?
     @State private var isJoining = false
+    @EnvironmentObject var viewModel: AuthenticationViewModel
 
     var onSuccess: (Event) -> Void
 
@@ -243,82 +242,134 @@ struct JoinEventView: View {
     private func joinEvent() {
         isJoining = true
         errorMessage = nil
-
-        let ref = Database.database().reference().child("events")
-
-        ref.observeSingleEvent(of: .value) { snapshot in
-            var matchedSnapshot: DataSnapshot?
-
+        
+        guard let currentUser = viewModel.user else {
+            isJoining = false
+            errorMessage = "No user logged in."
+            return
+        }
+        
+        let ref = Database.database().reference()
+        let eventsRef = ref.child("events")
+        let usersRef = ref.child("users")
+        
+        // Step 1: Find event by invite code (case-insensitive)
+        eventsRef.observeSingleEvent(of: .value) { snapshot in
+            var matchedEventKey: String?
+            var matchedEventDict: [String: Any]?
+            
             for child in snapshot.children {
-                if let snap = child as? DataSnapshot,
-                   let dict = snap.value as? [String: Any],
-                   let inviteCodeInDB = dict["inviteCode"] as? String,
-                   inviteCodeInDB.uppercased() == code.uppercased() {
-                    matchedSnapshot = snap
-                    break
+                if let snap = child as? DataSnapshot {
+                    let inviteCodeInDB = snap.key
+                    if inviteCodeInDB.lowercased() == code.lowercased() {
+                        matchedEventKey = snap.key
+                        matchedEventDict = snap.value as? [String: Any]
+                        break
+                    }
                 }
             }
-
-            guard let snap = matchedSnapshot,
-                  let dict = snap.value as? [String: Any] else {
+            
+            guard let eventKey = matchedEventKey,
+                  let eventDict = matchedEventDict else {
                 isJoining = false
                 errorMessage = "No event found with that code."
                 return
             }
-
-            do {
-                let data = try JSONSerialization.data(withJSONObject: dict)
-                let dateFormatter = DateFormatter()
-                dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssXXX"
-                let jsonDecoder = JSONDecoder()
-                jsonDecoder.dateDecodingStrategy = .formatted(dateFormatter)
-                var event = try jsonDecoder.decode(Event.self, from: data)
-                event.id = snap.key
-
-                if let memberData = UserDefaults.standard.data(forKey: "memberData"),
-                   let currentMember = try? JSONDecoder().decode(Member.self, from: memberData) {
-
-                    // Only append if not already a member
-                    if !event.members.contains(where: { $0.id == currentMember.id }) {
-                        event.members.append(currentMember)
-
-                        // Save updated event to Firebase
-                        let eventRef = ref.child(event.id)
-                        let encodedData = try JSONEncoder().encode(event)
-                        let dict = try JSONSerialization.jsonObject(with: encodedData) as? [String: Any] ?? [:]
-
-                        eventRef.setValue(dict) { error, _ in
-                            isJoining = false
-                            if let error = error {
-                                errorMessage = "Joined locally, but couldn't sync: \(error.localizedDescription)"
-                            } else {
-                                errorMessage = nil
-                            }
-                            onSuccess(event)
-                        }
-                    } else {
-                        // Already a member
-                        isJoining = false
-                        errorMessage = nil
-                        onSuccess(event)
-                    }
-
-                } else {
-                    isJoining = false
-                    errorMessage = "Could not load your member profile."
-                }
-
-            } catch {
+            
+            // Step 2: Get current memberIDs array
+            let memberIDs = eventDict["memberIDs"] as? [String] ?? []
+            
+            // Step 3: Check if user is already a member
+            if memberIDs.contains(currentUser.uid) {
                 isJoining = false
-                errorMessage = "Could not decode event data."
+                errorMessage = "You are already in this event."
+                return
             }
-
+            
+            // Step 4: Add user to memberIDs array
+            var updatedMemberIDs = memberIDs
+            updatedMemberIDs.append(currentUser.uid)
+            
+            // Step 5: Update Firebase with new memberIDs
+            eventsRef.child(eventKey).child("memberIDs").setValue(updatedMemberIDs) { error, _ in
+                if let error = error {
+                    isJoining = false
+                    errorMessage = "Failed to join event: \(error.localizedDescription)"
+                    return
+                }
+                
+                // Step 6: Add event to user's eventIDs array
+                usersRef.child(currentUser.uid).child("eventIDs").observeSingleEvent(of: .value) { userSnapshot in
+                    var userEventIDs = userSnapshot.value as? [String] ?? []
+                    
+                    if !userEventIDs.contains(eventKey) {
+                        userEventIDs.append(eventKey)
+                        usersRef.child(currentUser.uid).child("eventIDs").setValue(userEventIDs)
+                    }
+                    
+                    // Step 7: Load and return the complete event
+                    loadEventAndFinish(eventKey: eventKey, eventDict: eventDict, newMemberID: currentUser.uid)
+                }
+            }
         } withCancel: { error in
             isJoining = false
             errorMessage = "Failed to fetch events: \(error.localizedDescription)"
         }
+        
+        // Helper function to load event with hydrated members
+        func loadEventAndFinish(eventKey: String, eventDict: [String: Any], newMemberID: String) {
+            // Get memberIDs from the event
+            var memberIDs = eventDict["memberIDs"] as? [String] ?? []
+            memberIDs.append(newMemberID)
+            // Fetch all members from users collection
+            let usersRef = ref.child("users")
+            var hydratedMembers: [Member] = []
+            let group = DispatchGroup()
+            
+            for memberID in memberIDs {
+                group.enter()
+                usersRef.child(memberID).observeSingleEvent(of: .value) { memberSnapshot in
+                    defer { group.leave() }
+                    
+                    guard let memberDict = memberSnapshot.value as? [String: Any],
+                          let member = Member(dictionary: memberDict) else {
+                        return
+                    }
+                    hydratedMembers.append(member)
+                }
+            }
+            
+            group.notify(queue: .main) {
+                do {
+                    // Remove memberIDs before decoding Event
+                    var decodingDict = eventDict
+                    decodingDict.removeValue(forKey: "memberIDs")
+                    decodingDict.removeValue(forKey: "members") // In case legacy data exists
+                    
+                    let data = try JSONSerialization.data(withJSONObject: decodingDict)
+                    let dateFormatter = DateFormatter()
+                    dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssXXX"
+                    let jsonDecoder = JSONDecoder()
+                    jsonDecoder.dateDecodingStrategy = .formatted(dateFormatter)
+                    
+                    var event = try jsonDecoder.decode(Event.self, from: data)
+                    event.id = eventKey
+                    event.members = hydratedMembers // Hydrate with full Member objects
+                    
+                    // Remove placeholder places if any
+                    event.places.removeAll { $0.id == "placeholder" }
+                    
+                    isJoining = false
+                    errorMessage = nil
+                    onSuccess(event)
+                    
+                } catch {
+                    isJoining = false
+                    errorMessage = "Could not decode event data: \(error.localizedDescription)"
+                }
+            }
+        }
     }
-
 }
 
 

@@ -22,7 +22,20 @@ struct MilaoApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            NavigationStack {
+                AuthenticatedView {
+                    Image("LSIcon")
+                        .resizable()
+                        .frame(width: 100, height: 100)
+                        .padding(4)
+                    Text("Welcome to Milao!")
+                        .fontDesign(.rounded)
+                        .fontWeight(.bold)
+                    Text("Please sign in via Google or Apple.")
+                } content: {
+                    ContentView()
+                }
+            }
         }
     }
 }

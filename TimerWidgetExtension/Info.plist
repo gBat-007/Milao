@@ -6,6 +6,10 @@
 	<dict>
 		<key>NSExtensionPointIdentifier</key>
 		<string>com.apple.widgetkit-extension</string>
+		<key>NSSupportsLiveActivities</key>
+		<true/>
+		<key>NSSupportsLiveActivitiesFrequentUpdates</key>
+		<true/>
 	</dict>
 </dict>
 </plist>

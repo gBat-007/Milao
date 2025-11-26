@@ -15,25 +15,52 @@ import ActivityKit
 import WatchConnectivity
 import UIKit
 import AlarmKit
+import FirebaseDatabase
 
 struct ContentView: View {
     @State private var events: [Event] = []
     @State private var profileDoesNotWork = false
     @State private var showAddMenu = false
     @AppStorage("hasLaunchedBefore") private var hasLaunchedBefore = false
-    @AppStorage("memberData") private var memberData: Data?
 
-    @State private var showOnboarding = false
-    @State private var currentMember: Member?
+//    @State private var showOnboarding = false
     @State private var showProfileSheet = false // ✅ New flag
+    @EnvironmentObject var viewModel: AuthenticationViewModel
 
-    func currentMemberBinding() -> Binding<Member>? {
-        guard let currentMember else { return nil }
-        return Binding(
-            get: { currentMember },
-            set: { self.currentMember = $0 }
-        )
+    // Keep a reference to the notification observer so we can remove it
+    @State private var settingsObserver: NSObjectProtocol?
+
+    private func startStreaming() {
+        observeEventsRDB { newEvents in
+            print("🔄 Firebase gave \(newEvents.count) events")
+
+            self.events = newEvents
+
+            let widgets = newEvents.map { $0.asWidgetEvent }
+            WidgetEventStore.shared.widgetEvents = widgets
+
+            PhoneSessionManager.shared.send(widgetEvents: widgets)
+        }
     }
+
+    // Option A: Force refresh by removing observers and re-attaching the stream
+    private func forceRefreshEvents() {
+        print("🔁 Forcing events refresh due to member settings change.")
+        let rootRef = Database.database().reference()
+        rootRef.child("events").removeAllObservers()
+        // If you ever attach observers directly to "users" elsewhere, remove them too.
+
+        // Re-attach streaming observer
+        startStreaming()
+    }
+    
+//    func currentMemberBinding() -> Binding<Member>? {
+//        guard let currentMember else { return nil }
+//        return Binding(
+//            get: { currentMember },
+//            set: { self.currentMember = $0 }
+//        )
+//    }
 
     var body: some View {
         NavigationStack {
@@ -69,18 +96,20 @@ struct ContentView: View {
                     Spacer()
                 } else {
                     EventsList(events: $events)
+                        .environmentObject(viewModel)
                 }
             }
             .navigationTitle("My Events")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Settings", systemImage: "gear") {
-                        if let decoded = Member.decode(from: memberData) {
-                            currentMember = decoded
-                            showProfileSheet = true
-                        } else {
-                            profileDoesNotWork.toggle()
-                        }
+                        showProfileSheet = true
+//                        if let decoded = Member.decode(from: memberData) {
+//                            currentMember = decoded
+//                            showProfileSheet = true
+//                        } else {
+//                            profileDoesNotWork.toggle()
+//                        }
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
@@ -98,7 +127,6 @@ struct ContentView: View {
                         } else {
                             print("❌ Alarm permission denied.")
                         }
-                        await scheduleAlarm(for: newEvent)
                     }
                     saveEventRDB(newEvent) { result in
                         if case let .failure(error) = result {
@@ -108,49 +136,43 @@ struct ContentView: View {
                         }
                     }
                 }
+                .environmentObject(viewModel)
             }
             .sheet(isPresented: $showProfileSheet) {
-                if let decoded = Member.decode(from: memberData) {
                     NavigationStack {
-                        AllSettingsView(member: Binding(
-                            get: { decoded },
-                            set: { updated in
-                                self.currentMember = updated
-                                memberData = updated.encodeToData()
-                            }
-                        ), events: $events)
+                        AllSettingsView(events: $events)
+                        .environmentObject(viewModel)
                         .navigationTitle("My Profile")
                         .navigationBarTitleDisplayMode(.inline)
                     }
-                } else {
-                    Text("No member loaded")
-                }
             }
         }
         .onAppear {
-            showOnboarding = !hasLaunchedBefore
+//            showOnboarding = true
+//            showOnboarding = !hasLaunchedBefore
             
             let widgets = events.map { $0.asWidgetEvent }
             WidgetEventStore.shared.widgetEvents = widgets
             PhoneSessionManager.shared.send(widgetEvents: widgets)
 
-            if let data = memberData,
-               let decoded = try? JSONDecoder().decode(Member.self, from: data) {
-                currentMember = decoded
-            } else {
-                print("⚠️ Failed to decode member data")
-                profileDoesNotWork = true
-            }
+//            if let data = memberData,
+//               let decoded = try? JSONDecoder().decode(Member.self, from: data) {
+//                currentMember = decoded
+//            } else {
+//                print("⚠️ Failed to decode member data")
+//                profileDoesNotWork = true
+//            }
 
-            observeEventsRDB { newEvents in
-                print("🔄 Firebase gave \(newEvents.count) events")
+            // Start streaming events
+            startStreaming()
 
-                self.events = newEvents
-
-                let widgets = newEvents.map { $0.asWidgetEvent }
-                WidgetEventStore.shared.widgetEvents = widgets
-
-                PhoneSessionManager.shared.send(widgetEvents: widgets)
+            // Observe member settings changes and force refresh
+            settingsObserver = NotificationCenter.default.addObserver(
+                forName: .memberSettingsDidChangeAffectingEvents,
+                object: nil,
+                queue: .main
+            ) { _ in
+                self.forceRefreshEvents()
             }
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
@@ -158,13 +180,20 @@ struct ContentView: View {
             }
             
         }
-        .sheet(isPresented: $showOnboarding) {
-            OnboardingView { member in
-                memberData = member.encodeToData()
-                hasLaunchedBefore = true
-                currentMember = member
+        .onDisappear {
+            // Clean up observers when ContentView disappears
+            Database.database().reference().child("events").removeAllObservers()
+            if let settingsObserver {
+                NotificationCenter.default.removeObserver(settingsObserver)
             }
         }
+//        .sheet(isPresented: $showOnboarding) {
+//            OnboardingView { member in
+//                memberData = member.encodeToData()
+//                hasLaunchedBefore = true
+//                currentMember = member
+//            }
+//        }
     }
 }
 
@@ -172,7 +201,7 @@ struct EventsList: View {
     @Binding var events: [Event]
     @State private var showDeleteConfirmation = false
     @State private var eventToDeleteIndex: Int?
-
+    @EnvironmentObject var viewModel: AuthenticationViewModel
     var body: some View {
         List {
             ForEach(Array(events.enumerated()), id: \.element.id) { index, event in
@@ -181,7 +210,7 @@ struct EventsList: View {
                     set: { events[index] = $0 }
                 )
 
-                NavigationLink(destination: EventsView(event: eventBinding)) {
+                NavigationLink(destination: EventsView(event: eventBinding).environmentObject(viewModel)) {
                     EventRow(event: eventBinding)
                         .padding(5)
                         .background(

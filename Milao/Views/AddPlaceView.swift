@@ -14,7 +14,6 @@ struct AddPlaceView: View {
     @Binding var color1: CodableColor
     @Binding var color2: CodableColor
     var previousPlace: Place? //if it has a value of Place
-    @AppStorage("memberData") private var memberData: Data?
     @Environment(\.dismiss) private var dismiss
     @Binding var members: [Member]
 
@@ -206,3 +205,4 @@ struct AddPlaceView: View {
     }
 
 }
+

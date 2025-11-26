@@ -19,10 +19,9 @@ struct AddLocationView: View {
 
     @State private var activeSheet: SheetType?
     @State private var isCoordinateReady: Bool = false
-    @State private var closeTo: Coordinate = .init(latitude: 0.0, longitude: 0.0)
+    @State private var closeTo: Coordinate = .init(latitude: 47.6, longitude: -122.3)
     @State private var useAverageETA: Bool = false
-    @AppStorage("memberData") private var memberData: Data?
-
+    
     var body: some View {
         VStack(spacing: 20) {
             Text("How would you like to choose a location?")
@@ -89,7 +88,6 @@ struct AddLocationView: View {
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding()
                 }
-
                 Spacer()
             }
             .padding()
@@ -98,9 +96,9 @@ struct AddLocationView: View {
             if let prevPlace = previousPlace {
                 closeTo = prevPlace.location.coordinate
             } else {
-                let member = Member.decode(from: memberData)
-                closeTo = Coordinate(latitude: member?.coordinate?.latitude ?? 0.0,
-                                     longitude: member?.coordinate?.longitude ?? 0.0)
+//                let member =
+                closeTo = Coordinate(latitude: 47.6,
+                                     longitude: -122.3)
                 useAverageETA = true
             }
 

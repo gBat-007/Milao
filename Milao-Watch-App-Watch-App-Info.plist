@@ -4,5 +4,7 @@
 <dict>
 	<key>NSAlarmKitUsageDescription</key>
 	<string>We will use AlarmKit to showcase alarms for events</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>We will use your location when the app is in use to ensure your events occur at places that are perfect for you.</string>
 </dict>
 </plist>
