@@ -1,9 +1,9 @@
-
 import SwiftUI
 import UIKit
 import Firebase
 import FirebaseCore
 import FirebaseFirestore
+internal import Combine
 
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(
@@ -15,10 +15,36 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     }
 }
 
+class AppFirestoreManager: ObservableObject {
+    @Published var listeners: [ListenerRegistration] = []
+    
+    func startListeningToAllEvents() {
+        let db = Firestore.firestore()
+        let listener = db.collection("events").addSnapshotListener { snapshot, error in
+            if let error = error {
+                print("❌ App-wide listener error:", error)
+                return
+            }
+            print("🔄 Events collection updated app-wide")
+        }
+        listeners.append(listener)
+    }
+    
+    func stopAllListeners() {
+        listeners.forEach { $0.remove() }
+        listeners.removeAll()
+    }
+    
+    deinit {
+        stopAllListeners()
+    }
+}
+
 @main
 struct MilaoApp: App {
     
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
+    @StateObject private var firestoreManager = AppFirestoreManager()
 
     var body: some Scene {
         WindowGroup {
@@ -34,6 +60,10 @@ struct MilaoApp: App {
                     Text("Please sign in via Google or Apple.")
                 } content: {
                     ContentView()
+                        .environmentObject(firestoreManager)
+                        .onAppear {
+                            firestoreManager.startListeningToAllEvents()
+                        }
                 }
             }
         }

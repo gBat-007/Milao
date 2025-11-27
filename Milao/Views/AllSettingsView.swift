@@ -4,6 +4,9 @@ import Contacts
 import CoreLocation
 import FirebaseDatabase
 import FirebaseAuth
+internal import Combine
+import FirebaseFirestore
+
 
 //extension View {
 //    func scaleEffectOnTap() -> some View {
@@ -31,6 +34,7 @@ struct AllSettingsView: View {
     @Binding var events: [Event]
 
     @State private var tempName: String = ""
+    @State private var isLiveActivityOn = false
 //    @State private var tempLocation: String
 //    @State private var coordinate: CLLocationCoordinate2D?
     @State private var selectedEventID: String?
@@ -192,7 +196,7 @@ struct AllSettingsView: View {
 
                     // 2. Picker to select an event by title
                     Picker("Choose Event", selection: $selectedEventID) {
-                        ForEach(events.filter { $0.eventDate > Date() && $0.eventDate < Date().addingTimeInterval(24 * 60 * 60) }) { event in
+                        ForEach(events.filter { $0.eventDate > Date() && $0.eventDate < Date().addingTimeInterval(3600) }) { event in
                             Text(event.title).tag(event.id)
                         }
                     }
@@ -202,15 +206,15 @@ struct AllSettingsView: View {
                     }
 
                     // 3. Start Button - triggers Live Activity for selected event
-                    Button("Start Live Activity") {
-                        startLiveActivity()
-                    }
-                    .disabled(selectedEventID == nil)
-
-                    Button("Stop All Live Activities") {
-                        stopAllActivities()
-                    }
-                    .tint(.red)
+                    Toggle("Live Activity", isOn: $isLiveActivityOn)
+                        .disabled(selectedEventID == nil)
+                        .onChange(of: isLiveActivityOn) { _, newValue in
+                            if newValue {
+                                startLiveActivity()
+                            } else {
+                                stopAllActivities()
+                            }
+                        }
 
                     Button("Refresh Event") {
                         refreshEvent()
@@ -258,11 +262,13 @@ struct AllSettingsView: View {
         
         guard let id = selectedEventID else {
             print("❌ selectedEventID is nil.")
+            isLiveActivityOn = false
             return
         }
         
         guard let event = events.first(where: { $0.id == id }) else {
             print("❌ Could not find event with id: \(id)")
+            isLiveActivityOn = false
             return
         }
         
@@ -284,6 +290,7 @@ struct AllSettingsView: View {
     private func stopAllActivities() {
         TimerManager.shared.stopAllLiveActivities()
         EventManager.shared.clearActiveEvent()
+        isLiveActivityOn = false
         print("⛔ Stopped all live activities and cleared cached event ID.")
     }
 

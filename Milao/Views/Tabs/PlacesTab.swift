@@ -1,4 +1,3 @@
-
 import SwiftUI
 
 struct PlacesTab: View {
@@ -7,6 +6,7 @@ struct PlacesTab: View {
     @State private var newPlace: Place?
     @State private var showingMapSheet = false
     @EnvironmentObject var viewModel: AuthenticationViewModel
+
     var body: some View {
         VStack {
             if event.places.isEmpty {
@@ -43,6 +43,13 @@ struct PlacesTab: View {
                                 Image(systemName: "line.3.horizontal")
                                     .foregroundColor(.gray)
                                 PlaceRow(place: $event.places[index])
+                            }
+                            .contextMenu {
+                                Button {
+                                    routeInMaps(place: event.places[index])
+                                } label: {
+                                    Label("Route in Maps", systemImage: "map")
+                                }
                             }
                         }
                         .onMove(perform: movePlace)
@@ -115,6 +122,7 @@ struct PlacesTab: View {
         }
     }
 
+    // MARK: - List actions
 
     func movePlace(from source: IndexSet, to destination: Int) {
         event.places.move(fromOffsets: source, toOffset: destination)
@@ -133,14 +141,32 @@ struct PlacesTab: View {
             }
         }
     }
+
+    // MARK: - Routing
+
+    private func routeInMaps(place: Place) {
+        // Option 1: If Location has a 'coordinate' property
+        let lat = place.location.coordinate.latitude
+        let lon = place.location.coordinate.longitude
+        
+        // Option 2: If Location has direct lat/lon (unlikely)
+        // let lat = place.location.latitude
+        // let lon = place.location.longitude
+        
+        guard let url = URL(string: "maps://?daddr=\(lat),\(lon)&dirflg=d") else {
+            print("❌ Invalid Maps URL for place: \(place.name)")
+            return
+        }
+        
+        if UIApplication.shared.canOpenURL(url) {
+            UIApplication.shared.open(url, options: [:], completionHandler: nil)
+        }
+    }
 }
-
-
-
 
 struct PlaceRow: View {
     @Binding var place: Place
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 12) {
@@ -149,18 +175,18 @@ struct PlaceRow: View {
                     .padding(8)
                     .background(Color(.systemGray6))
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                
+
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(place.name) // e.g., "Restaurant"
+                    Text(place.name)
                         .font(.headline)
                         .foregroundStyle(.primary)
-                    
-                    Text(place.location.name) // e.g., "Cheesecake Factory Dubai"
+
+                    Text(place.location.name)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .lineLimit(1)
                         .truncationMode(.tail)
-                    
+
                     if !place.descriptionAI.isEmpty {
                         Text(place.descriptionAI)
                             .font(.footnote)

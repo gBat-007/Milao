@@ -1,5 +1,7 @@
 import SwiftUI
 import AlarmKit
+internal import Combine
+import FirebaseFirestore
 
 struct SettingsTab: View {
     @Binding var event: Event
@@ -10,6 +12,7 @@ struct SettingsTab: View {
     @State private var isAlarmOn = false
     @State private var alarmID: UUID?
     @State private var alarmOffset: TimeInterval = 0
+    @State private var firestoreListener: ListenerRegistration?
     
     // Picker options: 0 to 24h before event, minute granularity.
     private let maxOffsetMinutes = 24 * 60
@@ -73,6 +76,39 @@ struct SettingsTab: View {
             print("✅ Scheduled alarm '\(event.title)' for \(alarmDate.formatted(date: .numeric, time: .shortened)) with id: \(alarm.id)")
         } catch {
             print("❌ Failed to schedule alarm:", error)
+        }
+    }
+    
+    private func refreshEvent() {
+        print("🔄 Refreshing event from Firestore update")
+        // Your dynamic island refresh logic here
+    }
+    
+    private func setupFirestoreListener() {
+        let db = Firestore.firestore()
+        let eventRef = db.collection("events").document(event.id)
+        
+        firestoreListener = eventRef.addSnapshotListener { snapshot, error in
+            if let error = error {
+                print("❌ Firestore listener error:", error)
+                return
+            }
+            
+            guard let snapshot = snapshot, snapshot.exists else {
+                print("❌ Event document no longer exists")
+                return
+            }
+            
+            do {
+                let updatedEvent = try snapshot.data(as: Event.self)
+                print("🔄 Event updated from Firestore: \(updatedEvent.title)")
+                event = updatedEvent
+                primaryClr = updatedEvent.bgColor1.color
+                secondaryClr = updatedEvent.bgColor2.color
+                refreshEvent()
+            } catch {
+                print("❌ Failed to decode event from Firestore:", error)
+            }
         }
     }
     
@@ -160,6 +196,10 @@ struct SettingsTab: View {
         .onAppear {
             primaryClr = event.bgColor1.color
             secondaryClr = event.bgColor2.color
+            setupFirestoreListener()
+        }
+        .onDisappear {
+            firestoreListener?.remove()
         }
     }
 }

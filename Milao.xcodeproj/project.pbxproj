@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		4DDD3A1D2EB906CF00B67CA4 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 4DDD3A1C2EB906CF00B67CA4 /* GoogleSignIn */; };
 		4DDD3A1F2EB906CF00B67CA4 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 4DDD3A1E2EB906CF00B67CA4 /* GoogleSignInSwift */; };
+		816F37192ED8A0BC002A0D58 /* milaowatchapp Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 816F370F2ED8A0BA002A0D58 /* milaowatchapp Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		D31089542E32A26B00D54E2F /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D36B74802E2AC37F000DA1F5 /* WidgetKit.framework */; };
 		D31089552E32A26B00D54E2F /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D36B74822E2AC37F000DA1F5 /* SwiftUI.framework */; };
 		D31089662E32A27000D54E2F /* AlarmKitExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D31089532E32A26B00D54E2F /* AlarmKitExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -64,6 +65,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		816F37172ED8A0BC002A0D58 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D3EF73E32E2ABF8000371557 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 816F370E2ED8A0BA002A0D58;
+			remoteInfo = "milaowatchapp Watch App";
+		};
 		D31089642E32A27000D54E2F /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = D3EF73E32E2ABF8000371557 /* Project object */;
@@ -99,6 +107,7 @@
 			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
 			dstSubfolderSpec = 16;
 			files = (
+				816F37192ED8A0BC002A0D58 /* milaowatchapp Watch App.app in Embed Watch Content */,
 			);
 			name = "Embed Watch Content";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -106,6 +115,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		816F370F2ED8A0BA002A0D58 /* milaowatchapp Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "milaowatchapp Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		D31089532E32A26B00D54E2F /* AlarmKitExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = AlarmKitExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		D35DB3312E3128F2001D5C57 /* Milao-Watch-App-Watch-App-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Milao-Watch-App-Watch-App-Info.plist"; sourceTree = "<group>"; };
 		D36B747E2E2AC37F000DA1F5 /* TimerWidgetExtensionExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TimerWidgetExtensionExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -163,6 +173,11 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		816F37102ED8A0BA002A0D58 /* Milao Watch App */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Milao Watch App";
+			sourceTree = "<group>";
+		};
 		D31089562E32A26B00D54E2F /* AlarmKit */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -180,11 +195,6 @@
 			path = TimerWidgetExtension;
 			sourceTree = "<group>";
 		};
-		D36C9C562E2FD96900A7B84B /* Milao Watch App */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "Milao Watch App";
-			sourceTree = "<group>";
-		};
 		D3EF73ED2E2ABF8000371557 /* Milao */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -198,6 +208,13 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		816F370C2ED8A0BA002A0D58 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D31089502E32A26B00D54E2F /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -289,8 +306,8 @@
 				D35DB3312E3128F2001D5C57 /* Milao-Watch-App-Watch-App-Info.plist */,
 				D3EF73ED2E2ABF8000371557 /* Milao */,
 				D36B74842E2AC37F000DA1F5 /* TimerWidgetExtension */,
-				D36C9C562E2FD96900A7B84B /* Milao Watch App */,
 				D31089562E32A26B00D54E2F /* AlarmKit */,
+				816F37102ED8A0BA002A0D58 /* Milao Watch App */,
 				D36B747F2E2AC37F000DA1F5 /* Frameworks */,
 				D3EF73EC2E2ABF8000371557 /* Products */,
 			);
@@ -302,6 +319,7 @@
 				D3EF73EB2E2ABF8000371557 /* Milao.app */,
 				D36B747E2E2AC37F000DA1F5 /* TimerWidgetExtensionExtension.appex */,
 				D31089532E32A26B00D54E2F /* AlarmKitExtension.appex */,
+				816F370F2ED8A0BA002A0D58 /* milaowatchapp Watch App.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -309,6 +327,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		816F370E2ED8A0BA002A0D58 /* milaowatchapp Watch App */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 816F371C2ED8A0BC002A0D58 /* Build configuration list for PBXNativeTarget "milaowatchapp Watch App" */;
+			buildPhases = (
+				816F370B2ED8A0BA002A0D58 /* Sources */,
+				816F370C2ED8A0BA002A0D58 /* Frameworks */,
+				816F370D2ED8A0BA002A0D58 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				816F37102ED8A0BA002A0D58 /* Milao Watch App */,
+			);
+			name = "milaowatchapp Watch App";
+			packageProductDependencies = (
+			);
+			productName = "milaowatchapp Watch App";
+			productReference = 816F370F2ED8A0BA002A0D58 /* milaowatchapp Watch App.app */;
+			productType = "com.apple.product-type.application";
+		};
 		D31089522E32A26B00D54E2F /* AlarmKitExtension */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = D31089692E32A27000D54E2F /* Build configuration list for PBXNativeTarget "AlarmKitExtension" */;
@@ -391,6 +431,7 @@
 			dependencies = (
 				D36B74932E2AC381000DA1F5 /* PBXTargetDependency */,
 				D31089652E32A27000D54E2F /* PBXTargetDependency */,
+				816F37182ED8A0BC002A0D58 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				D3EF73ED2E2ABF8000371557 /* Milao */,
@@ -437,6 +478,9 @@
 				LastSwiftUpdateCheck = 2600;
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
+					816F370E2ED8A0BA002A0D58 = {
+						CreatedOnToolsVersion = 26.0.1;
+					};
 					D31089522E32A26B00D54E2F = {
 						CreatedOnToolsVersion = 26.0;
 					};
@@ -469,11 +513,19 @@
 				D3EF73EA2E2ABF8000371557 /* Milao */,
 				D36B747D2E2AC37F000DA1F5 /* TimerWidgetExtensionExtension */,
 				D31089522E32A26B00D54E2F /* AlarmKitExtension */,
+				816F370E2ED8A0BA002A0D58 /* milaowatchapp Watch App */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		816F370D2ED8A0BA002A0D58 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D31089512E32A26B00D54E2F /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -498,6 +550,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		816F370B2ED8A0BA002A0D58 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D310894F2E32A26B00D54E2F /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -522,6 +581,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		816F37182ED8A0BC002A0D58 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 816F370E2ED8A0BA002A0D58 /* milaowatchapp Watch App */;
+			targetProxy = 816F37172ED8A0BC002A0D58 /* PBXContainerItemProxy */;
+		};
 		D31089652E32A27000D54E2F /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = D31089522E32A26B00D54E2F /* AlarmKitExtension */;
@@ -535,6 +599,74 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		816F371A2ED8A0BC002A0D58 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "Milao Icon 2";
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 22P5RFVD9A;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = milaowatchapp;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.milao.swifteers;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.milao.swifteers.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Debug;
+		};
+		816F371B2ED8A0BC002A0D58 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "Milao Icon 2";
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 22P5RFVD9A;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = milaowatchapp;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.milao.swifteers;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.milao.swifteers.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Release;
+		};
 		D31089672E32A27000D54E2F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -851,6 +983,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		816F371C2ED8A0BC002A0D58 /* Build configuration list for PBXNativeTarget "milaowatchapp Watch App" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				816F371A2ED8A0BC002A0D58 /* Debug */,
+				816F371B2ED8A0BC002A0D58 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		D31089692E32A27000D54E2F /* Build configuration list for PBXNativeTarget "AlarmKitExtension" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
