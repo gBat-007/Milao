@@ -20,34 +20,42 @@ struct WatchContentView: View {
 
     var body: some View {
         NavigationStack {
-                List(session.events) { event in
-                    NavigationLink(destination: WatchEventDetailView(event: event)) {
-                        WatchEventRow(event: event)
-                            .padding(0)
-                            .background(
-                                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                    .fill(LinearGradient(
-                                        colors: [event.bgColor1.color, event.bgColor2.color],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    ))
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .stroke(Color.white.opacity(0.2), lineWidth: 2)
-                            )
-//                            .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 5)
-//                            .blur(radius: 0.3) // small blur for softness
-                            .padding(.vertical, 2)
+            List {
+                Section {
+                    ForEach(session.events) { event in
+                        NavigationLink(destination: WatchEventDetailView(event: event)) {
+                            WatchEventRow(event: event)
+                                .padding(0)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                        .fill(LinearGradient(
+                                            colors: [event.bgColor1.color, event.bgColor2.color],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        ))
+                                )
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .stroke(Color.white.opacity(0.2), lineWidth: 2)
+                                )
+                                .padding(.vertical, 2)
+                        }
                     }
+                } footer: {
+                    Button(action: {
+                        WatchSessionManager.shared.requestEvents()
+                    }) {
+                        Text("Refresh Events")
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                    }
+                    .buttonStyle(.bordered)
                 }
             }
+        }
         .onAppear {
             print("👀 WatchContentView appeared — requesting events")
             WatchSessionManager.shared.requestEvents()
-        }
-            Button("Refresh Events") {
-                WatchSessionManager.shared.requestEvents()
         }
     }
 }
@@ -56,6 +64,7 @@ struct WatchEventRow: View {
     var event: WidgetEvent
     @State var textColor: Color = .black
     @State var subTextColor: Color = .gray
+    
     var body: some View {
         VStack(spacing: 30) {
             HStack(alignment: .center, spacing: 16) {

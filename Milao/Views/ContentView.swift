@@ -139,12 +139,12 @@ struct ContentView: View {
                 .environmentObject(viewModel)
             }
             .sheet(isPresented: $showProfileSheet) {
-                    NavigationStack {
-                        AllSettingsView(events: $events)
+                NavigationStack {
+                    AllSettingsView(events: $events)
                         .environmentObject(viewModel)
                         .navigationTitle("My Profile")
                         .navigationBarTitleDisplayMode(.inline)
-                    }
+                }
             }
         }
         .onAppear {

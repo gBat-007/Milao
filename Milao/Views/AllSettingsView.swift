@@ -137,7 +137,7 @@ struct AllSettingsView: View {
 //                    Button("Edit Your Location") {
 //                        editLocationSheet = true
 //                    }
-//                    
+//
 //                    .sheet(isPresented: $editLocationSheet){
 //                        NavigationStack {
 //                            Form {
@@ -185,7 +185,7 @@ struct AllSettingsView: View {
 //                            }
 //                        }
 //                    }
-//                    
+//
 //                }
                 
                 Section("Live Activities") {
