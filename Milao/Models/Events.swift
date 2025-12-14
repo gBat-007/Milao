@@ -63,7 +63,7 @@ struct Event: Identifiable, Codable, Hashable, Equatable {
         self.eventDate = eventDate
         self.bgColor1 = CodableColor(color: primaryColor)
         self.bgColor2 = CodableColor(color: secondaryColor)
-        self.ownerID = UIDevice.current.identifierForVendor?.uuidString ?? "unknown-device"
+        self.ownerID = members.first?.id ?? "unknown-owner"
     }
 
     // Firebase decoding initializer

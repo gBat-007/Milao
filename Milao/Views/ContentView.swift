@@ -16,6 +16,8 @@ import WatchConnectivity
 import UIKit
 import AlarmKit
 import FirebaseDatabase
+import FirebaseFirestore
+import FirebaseAuth
 
 struct ContentView: View {
     @State private var events: [Event] = []
@@ -201,6 +203,7 @@ struct EventsList: View {
     @Binding var events: [Event]
     @State private var showDeleteConfirmation = false
     @State private var eventToDeleteIndex: Int?
+    let currentUID = Auth.auth().currentUser?.uid
     @EnvironmentObject var viewModel: AuthenticationViewModel
     var body: some View {
         List {
@@ -226,7 +229,7 @@ struct EventsList: View {
 //                        .padding(.vertical, 6)
                 }
                 .swipeActions {
-                    if event.ownerID == UIDevice.current.identifierForVendor?.uuidString {
+                    if event.ownerID == currentUID {
                         Button(role: .destructive) {
                             eventToDeleteIndex = index
                             showDeleteConfirmation = true
@@ -268,6 +271,7 @@ struct EventRow: View {
     @State var subTextColor: Color = .gray
     @State var showOwnerPopover: Bool = false
     @State var showOwnerAlert: Bool = false
+    let currentUID = Auth.auth().currentUser?.uid
     var body: some View {
         VStack(spacing: 30) {
             HStack(alignment: .top, spacing: 16) {
@@ -280,7 +284,7 @@ struct EventRow: View {
                         Text(event.title)
                             .font(.headline)
                             .foregroundColor(textColor)
-                        if event.ownerID == UIDevice.current.identifierForVendor?.uuidString {
+                        if event.ownerID == currentUID {
                             Image(systemName: "crown.fill")
                                 .foregroundColor(textColor)
                                 .onTapGesture {
