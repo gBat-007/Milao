@@ -1,6 +1,5 @@
 import SwiftUI
 
-// Put this near SettingsTab in the same file or another Swift file
 
 struct LiveAlarmsListView: View {
     @State private var alarms: [CachedAlarm] = []
@@ -84,3 +83,4 @@ struct AlarmTileRow: View {
         }
     }
 }
+

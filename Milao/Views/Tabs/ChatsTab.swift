@@ -22,7 +22,7 @@ struct ChatsTab: View {
             List {
                 ForEach(Array(event.chats.enumerated()), id: \.element.id) { index, chat in
                     NavigationStack {
-                        NavigationLink(destination: ChatsView(chat: $event.chats[index], thisMember: currentMemberName, newMessage: $newMessage)) {
+                        NavigationLink(destination: ChatsView(eventId: event.id, chatIndex: index, chat: $event.chats[index], thisMember: currentMemberName, newMessage: $newMessage)) {
                             HStack {
                                 Text(chat.emoji)
                                     .font(.largeTitle)
@@ -114,7 +114,7 @@ struct AddChatView: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Add") {
-                        let newChat = Chat(title: title, emoji: emoji, messages: [Message(text: "Welcome to the \(title) chat.", isSentByMemberName: "Admin")])
+                        let newChat = Chat(title: title, emoji: emoji, messages: [Message(text: "Welcome to the \(title) chat.", isSentByMemberName: "Admin", timestamp: Date.now)])
                         onAdd(newChat)
                         dismiss()
                     }

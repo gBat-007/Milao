@@ -28,7 +28,7 @@ func saveEventRDB(_ event: Event, completion: @escaping (Result<Event, Error>) -
             Chat(
                 title: "General",
                 emoji: "💬",
-                messages: [Message(text: "Welcome to the general chat.", isSentByMemberName: "Admin")]
+                messages: [Message(text: "Welcome to the general chat.", isSentByMemberName: "Admin", timestamp: eventToSave.eventDate)]
             )
         ]
     }

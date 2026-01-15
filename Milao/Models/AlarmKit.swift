@@ -3,11 +3,16 @@ import SwiftUI
 import ActivityKit
 import WidgetKit
 
-func scheduleAlarm(for event: Event) async {
+func scheduleAlarm(for event: Event) async -> UUID? {
     let alert = AlarmPresentation.Alert(
         title: LocalizedStringResource(stringLiteral: event.title),
-        stopButton: AlarmButton(text: "Dismiss", textColor: .white, systemImageName: "stop.fill")
+        stopButton: AlarmButton(
+            text: "Dismiss",
+            textColor: .white,
+            systemImageName: "stop.fill"
+        )
     )
+
     let presentation = AlarmPresentation(alert: alert)
 
     let metadata = EventAlarmMetadata(
@@ -19,9 +24,8 @@ func scheduleAlarm(for event: Event) async {
     let attributes = AlarmAttributes<EventAlarmMetadata>(
         presentation: presentation,
         metadata: metadata,
-        tintColor: .orange // Optional: match bgColor1 if you'd like
+        tintColor: .orange
     )
-
 
     let configuration = AlarmManager.AlarmConfiguration(
         countdownDuration: nil,
@@ -30,14 +34,17 @@ func scheduleAlarm(for event: Event) async {
     )
 
     let alarmID = UUID()
+
     do {
         let alarm = try await AlarmManager.shared.schedule(
             id: alarmID,
             configuration: configuration
         )
         print("✅ Scheduled alarm '\(event.title)' with id: \(alarm.id)")
+        return alarmID
     } catch {
         print("❌ Failed to schedule alarm:", error)
+        return nil
     }
 }
 

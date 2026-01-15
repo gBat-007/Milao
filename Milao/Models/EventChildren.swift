@@ -15,6 +15,7 @@ struct Message: Identifiable, Codable, Hashable {
     var id: String = UUID().uuidString
     let text: String
     let isSentByMemberName: String
+    let timestamp: Date
 }
 
 struct Coordinate: Hashable, Codable, Equatable {

@@ -37,9 +37,12 @@ struct ContentView: View {
             self.events = newEvents
 
             let widgets = newEvents.map { $0.asWidgetEvent }
+            
             WidgetEventStore.shared.widgetEvents = widgets
 
             PhoneSessionManager.shared.send(widgetEvents: widgets)
+            
+            EventsRefresh.shared.refreshEvent(events: events)
         }
     }
 
@@ -151,7 +154,6 @@ struct ContentView: View {
         .onAppear {
 //            showOnboarding = true
 //            showOnboarding = !hasLaunchedBefore
-            
             let widgets = events.map { $0.asWidgetEvent }
             WidgetEventStore.shared.widgetEvents = widgets
             PhoneSessionManager.shared.send(widgetEvents: widgets)

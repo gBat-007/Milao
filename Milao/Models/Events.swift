@@ -58,7 +58,7 @@ struct Event: Identifiable, Codable, Hashable, Equatable {
         self.title = title
         self.emoji = emoji ?? "🎉"
         self.members = members
-        self.chats = [Chat(title: "General", emoji: "💬", messages: [Message(text: "Welcome to the general chat.", isSentByMemberName: "Admin")])]
+        self.chats = [Chat(title: "General", emoji: "💬", messages: [Message(text: "Welcome to the general chat.", isSentByMemberName: "Admin", timestamp: eventDate)])]
         self.places = []
         self.eventDate = eventDate
         self.bgColor1 = CodableColor(color: primaryColor)

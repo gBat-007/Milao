@@ -21,7 +21,5 @@
 	<string>838988061822-sq8av7d4vp3jv1ltd1age41nb78ooe90.apps.googleusercontent.com</string>
 	<key>NSAlarmKitUsageDescription</key>
 	<string>We will use AlarmKit to showcase alarms for events</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Milao uses your precise location once to set your home location, allowing for accurate event locations perfect for you. Please select &apos;Allow Once&apos; to set your current location as your home as Milao will not track your location anyways.</string>
 </dict>
 </plist>

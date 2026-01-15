@@ -1,5 +1,5 @@
-
 import SwiftUI
+import FirebaseDatabase
 
 struct PlacesTab: View {
     @Binding var event: Event
@@ -7,6 +7,9 @@ struct PlacesTab: View {
     @State private var newPlace: Place?
     @State private var showingMapSheet = false
     @EnvironmentObject var viewModel: AuthenticationViewModel
+
+    @State private var eventListenerHandle: DatabaseHandle?
+
     var body: some View {
         VStack {
             if event.places.isEmpty {
@@ -44,13 +47,19 @@ struct PlacesTab: View {
                                     .foregroundColor(.gray)
                                 PlaceRow(place: $event.places[index])
                             }
+                            .contextMenu {
+                                Button {
+                                    routeInMaps(place: event.places[index])
+                                } label: {
+                                    Label("Route in Maps", systemImage: "map")
+                                }
+                            }
                         }
                         .onMove(perform: movePlace)
                         .onDelete(perform: deletePlace)
                     }
                 }
                 .listStyle(.insetGrouped)
-
                 Spacer()
 
                 HStack {
@@ -133,6 +142,51 @@ struct PlacesTab: View {
             }
         }
     }
+    
+    private func startEventListener() {
+        let ref = Database.database().reference()
+        let eventRef = ref.child("events").child(event.id)
+        eventListenerHandle = eventRef.observe(.value) { snapshot in
+            guard let dict = snapshot.value as? [String: Any] else { return }
+            do {
+                let data = try JSONSerialization.data(withJSONObject: dict)
+                let decoder = JSONDecoder()
+                decoder.dateDecodingStrategy = .iso8601
+                let updatedEvent = try decoder.decode(Event.self, from: data)
+                self.event = updatedEvent
+            } catch {
+                print("Failed to decode event from Firebase: \(error)")
+            }
+        }
+    }
+
+    private func stopEventListener() {
+        if let handle = eventListenerHandle {
+            let ref = Database.database().reference()
+            let eventRef = ref.child("events").child(event.id)
+            eventRef.removeObserver(withHandle: handle)
+        }
+    }
+    
+    private func routeInMaps(place: Place) {
+            // Option 1: If Location has a 'coordinate' property
+            let lat = place.location.coordinate.latitude
+            let lon = place.location.coordinate.longitude
+            
+            // Option 2: If Location has direct lat/lon (unlikely)
+            // let lat = place.location.latitude
+            // let lon = place.location.longitude
+            
+            guard let url = URL(string: "maps://?daddr=\(lat),\(lon)&dirflg=d") else {
+                print("❌ Invalid Maps URL for place: \(place.name)")
+                return
+            }
+            
+            if UIApplication.shared.canOpenURL(url) {
+                UIApplication.shared.open(url, options: [:], completionHandler: nil)
+            }
+        }
+
 }
 
 
@@ -178,3 +232,4 @@ struct PlaceRow: View {
         .padding(.horizontal)
     }
 }
+

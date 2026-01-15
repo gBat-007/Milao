@@ -37,6 +37,7 @@ struct AllSettingsView: View {
     @State private var showEventPicker: Bool = false
     @State private var isUpdating = false
     @State private var message = "Loading..."
+    @State private var isLiveActivityOn: Bool = false
 //    @State private var editLocationSheet: Bool = false
     @EnvironmentObject var viewModel: AuthenticationViewModel
 //    @StateObject private var completerDelegate = SearchCompleterDelegate()
@@ -185,38 +186,38 @@ struct AllSettingsView: View {
 //                }
                 
                 Section("Live Activities") {
-                    // 1. Create a sorted list of upcoming events
-//                    let upcomingEvents = events
-//                        .filter { $0.eventDate > Date() }
-//                        .sorted(by: { $0.eventDate < $1.eventDate })
+                                    // 1. Create a sorted list of upcoming events
+                //                    let upcomingEvents = events
+                //                        .filter { $0.eventDate > Date() }
+                //                        .sorted(by: { $0.eventDate < $1.eventDate })
 
-                    // 2. Picker to select an event by title
-                    Picker("Choose Event", selection: $selectedEventID) {
-                        ForEach(events.filter { $0.eventDate > Date() && $0.eventDate < Date().addingTimeInterval(24 * 60 * 60) }) { event in
-                            Text(event.title).tag(event.id)
-                        }
-                    }
-                    .pickerStyle(.menu)
-                    .onChange(of: selectedEventID) { newValue in
-                        print("🔍 Picker selection changed. New selectedEventID: \(newValue ?? "nil")")
-                    }
+                                    // 2. Picker to select an event by title
+                                    Picker("Choose Event", selection: $selectedEventID) {
+                                        ForEach(events.filter { $0.eventDate > Date() && $0.eventDate < Date().addingTimeInterval(3600) }) { event in
+                                            Text(event.title).tag(event.id)
+                                        }
+                                    }
+                                    .pickerStyle(.menu)
+                                    .onChange(of: selectedEventID) { newValue in
+                                        print("🔍 Picker selection changed. New selectedEventID: \(newValue ?? "nil")")
+                                    }
 
-                    // 3. Start Button - triggers Live Activity for selected event
-                    Button("Start Live Activity") {
-                        startLiveActivity()
-                    }
-                    .disabled(selectedEventID == nil)
+                                    // 3. Start Button - triggers Live Activity for selected event
+                                    Toggle("Live Activity", isOn: $isLiveActivityOn)
+                                        .disabled(selectedEventID == nil)
+                                        .onChange(of: isLiveActivityOn) { _, newValue in
+                                            if newValue {
+                                                startLiveActivity()
+                                            } else {
+                                                stopAllActivities()
+                                            }
+                                        }
 
-                    Button("Stop All Live Activities") {
-                        stopAllActivities()
-                    }
-                    .tint(.red)
-
-                    Button("Refresh Event") {
-                        refreshEvent()
-                    }
-                
-                }
+                                    Button("Refresh Event") {
+                                        EventsRefresh.shared.refreshEvent(events: events)
+                                    }
+                                
+                                }
                 
             }
             .navigationTitle("Settings")
@@ -252,56 +253,43 @@ struct AllSettingsView: View {
 //            }
         }
     }
-    
     private func startLiveActivity() {
-        print("🚀 Start button tapped.")
-        
-        guard let id = selectedEventID else {
-            print("❌ selectedEventID is nil.")
-            return
+            print("🚀 Start button tapped.")
+            
+            guard let id = selectedEventID else {
+                print("❌ selectedEventID is nil.")
+                isLiveActivityOn = false
+                return
+            }
+            
+            guard let event = events.first(where: { $0.id == id }) else {
+                print("❌ Could not find event with id: \(id)")
+                isLiveActivityOn = false
+                return
+            }
+            
+            print("✅ Found event: \(event.title) with ID: \(event.id)")
+            
+            // Persist the selected event ID globally
+            EventManager.shared.selectedEventID = event.id
+            EventManager.shared.activeLiveActivityEventID = event.id
+            print("💾 Persisted active Live Activity event ID: \(event.id)")
+            
+            TimerManager.shared.stopAllLiveActivities()
+            print("🟢 Starting new live activity for event: \(event.id)")
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                TimerManager.shared.startSimpleTimer(to: event.asWidgetEvent)
+            }
         }
-        
-        guard let event = events.first(where: { $0.id == id }) else {
-            print("❌ Could not find event with id: \(id)")
-            return
-        }
-        
-        print("✅ Found event: \(event.title) with ID: \(event.id)")
-        
-        // Persist the selected event ID globally
-        EventManager.shared.selectedEventID = event.id
-        EventManager.shared.activeLiveActivityEventID = event.id
-        print("💾 Persisted active Live Activity event ID: \(event.id)")
-        
-        TimerManager.shared.stopAllLiveActivities()
-        print("🟢 Starting new live activity for event: \(event.id)")
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            TimerManager.shared.startSimpleTimer(to: event.asWidgetEvent)
-        }
-    }
 
-    private func stopAllActivities() {
-        TimerManager.shared.stopAllLiveActivities()
-        EventManager.shared.clearActiveEvent()
-        print("⛔ Stopped all live activities and cleared cached event ID.")
-    }
+        private func stopAllActivities() {
+            TimerManager.shared.stopAllLiveActivities()
+            EventManager.shared.clearActiveEvent()
+            isLiveActivityOn = false
+            print("⛔ Stopped all live activities and cleared cached event ID.")
+        }
 
-    private func refreshEvent() {
-        guard let id = EventManager.shared.activeLiveActivityEventID else {
-            print("❌ No cached active Live Activity ID found.")
-            return
-        }
-        
-        guard let event = events.first(where: { $0.id == id }) else {
-            print("❌ Could not find event with id: \(id)")
-            return
-        }
-        
-        print("🔄 Refreshing Live Activity for cached event: \(event.title) (\(event.id))")
-        print("The cached event info is \(event.title) \(event.emoji) (\(event.id))")
-        TimerManager.shared.updateSimpleTimer(to: event.newWidgetEvent(event: event))
-    }
 //
 //    private func selectLocation(_ result: MKLocalSearchCompletion) {
 //        let request = MKLocalSearch.Request(completion: result)

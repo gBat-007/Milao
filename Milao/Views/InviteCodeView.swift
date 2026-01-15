@@ -44,3 +44,6 @@ struct InviteCodeView: View {
             .animation(.easeInOut, value: showCopiedToast)
     }
 }
+
+
+    
