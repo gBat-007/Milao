@@ -1,5 +1,4 @@
 # Milao
-
 Milao is an AI-powered planning assistant built for iOS 26+ using Apple's Foundation Models framework. Using AI-guided questioning, it helps groups decide on optimal meeting locations as per their requirements without excessive decision-making, especially meant for large cities with many options available. All AI processing happens on-device, while Firebase Realtime enables instant sync between attendees. Our target audience is planning simple, casual events, perhaps for a club or birthday, as we've personally noticed these can sometimes become quite a hassle when considering all your needs!
 
 ## Why Not Just Use a Group Chat Application, ChatGPT, and Google Maps?
@@ -14,8 +13,8 @@ Nope, we'll by default set a live activity onto your iPhone showing time left ti
 ## And If I Switch Devices?
 We have Sign in With Google and Apple set up for identification -- so if you switch devices, all your data will sync by default! Plus, at any time you can delete your account and stored data with a simple click!
 
-## But Don't Apps like Lu.ma, Uber Eats for restaurants, etc. handle event management in most ways we need?
+## But Don't Apps like Luma, Uber Eats for restaurants, etc. handle event management in most ways we need?
 That's just it. Event _management_. Our app, though it has many event management features to make your life easier, is built on the core of making event _planning_ less work; in essence, figuring out where to go. Plus, having multiple locations for casual events is fairly common yet rarely handled by other applications.
 
-## Ok, I Want this App.
-We're still in our developer testing phase, we'll release a TestFlight build soon!
+## Ok, I want this app.
+We're still in our developer testing phase, and we'll release a TestFlight build soon!
