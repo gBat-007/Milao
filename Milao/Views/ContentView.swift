@@ -26,35 +26,52 @@ struct ContentView: View {
 //    @State private var showOnboarding = false
     @State private var showProfileSheet = false // ✅ New flag
     @EnvironmentObject var viewModel: AuthenticationViewModel
+    @Environment(\.scenePhase) private var scenePhase
 
-    // Keep a reference to the notification observer so we can remove it
     @State private var settingsObserver: NSObjectProtocol?
+    @State private var eventsListener: DatabaseHandle?
 
     private func startStreaming() {
-        observeEventsRDB { newEvents in
-            print("🔄 Firebase gave \(newEvents.count) events")
+        guard eventsListener == nil else { return }
+        eventsListener = observeEventsRDB { newEvents in
+            DispatchQueue.main.async {
+                print("🔄 Firebase gave \(newEvents.count) events")
 
-            self.events = newEvents
+                self.events = newEvents
 
-            let widgets = newEvents.map { $0.asWidgetEvent }
-            
-            WidgetEventStore.shared.widgetEvents = widgets
+                let widgets = newEvents.map { $0.asWidgetEvent }
+                WidgetEventStore.shared.widgetEvents = widgets
 
-            PhoneSessionManager.shared.send(widgetEvents: widgets)
-            
-            EventsRefresh.shared.refreshEvent(events: events)
+                PhoneSessionManager.shared.send(widgetEvents: widgets)
+                EventsRefresh.shared.refreshEvent(events: newEvents)
+            }
         }
     }
 
-    // Option A: Force refresh by removing observers and re-attaching the stream
-    private func forceRefreshEvents() {
-        print("🔁 Forcing events refresh due to member settings change.")
-        let rootRef = Database.database().reference()
-        rootRef.child("events").removeAllObservers()
-        // If you ever attach observers directly to "users" elsewhere, remove them too.
+    private func upsertEvent(_ event: Event) {
+        if let index = events.firstIndex(where: { $0.id == event.id }) {
+            events[index] = event
+        } else {
+            events.append(event)
+        }
+    }
 
-        // Re-attach streaming observer
-        startStreaming()
+    @MainActor
+    private func refreshEvents() async {
+        await withCheckedContinuation { continuation in
+            refreshEventsRDB { refreshedEvents in
+                events = refreshedEvents
+                let widgets = refreshedEvents.map { $0.asWidgetEvent }
+                WidgetEventStore.shared.widgetEvents = widgets
+                PhoneSessionManager.shared.send(widgetEvents: widgets)
+                EventsRefresh.shared.refreshEvent(events: refreshedEvents)
+                continuation.resume()
+            }
+        }
+    }
+
+    private func forceRefreshEvents() {
+        Task { await refreshEvents() }
     }
     
 //    func currentMemberBinding() -> Binding<Member>? {
@@ -69,38 +86,43 @@ struct ContentView: View {
         NavigationStack {
             Group {
                 if events.isEmpty {
-                    Spacer()
-                    VStack(spacing: 20) {
-                        Image(systemName: "calendar.badge.plus")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 80, height: 80)
-                            .foregroundColor(.accentColor)
-                            .padding(.bottom, 10)
+                    ScrollView {
+                        VStack(spacing: 20) {
+                            Image(systemName: "calendar.badge.plus")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 80, height: 80)
+                                .foregroundColor(.accentColor)
+                                .padding(.bottom, 10)
 
-                        Text("No events yet!")
-                            .font(.title2)
-                            .foregroundStyle(.secondary)
+                            Text("No events yet!")
+                                .font(.title2)
+                                .foregroundStyle(.secondary)
 
-                        Button(action: {
-                            showAddMenu = true
-                        }) {
-                            Label("Create Your First Event", systemImage: "plus")
-                                .font(.headline)
-                                .padding()
-                                .frame(maxWidth: .infinity)
-                                .background(Color.accentColor)
-                                .foregroundColor(.white)
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                                .padding(.horizontal)
+                            Button(action: {
+                                showAddMenu = true
+                            }) {
+                                Label("Create Your First Event", systemImage: "plus")
+                                    .font(.headline)
+                                    .padding()
+                                    .frame(maxWidth: .infinity)
+                                    .background(Color.accentColor)
+                                    .foregroundColor(.white)
+                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                                    .padding(.horizontal)
+                            }
+                            .buttonStyle(.plain)
+                            Spacer(minLength: 24)
                         }
-                        .buttonStyle(.plain)
+                        .frame(maxWidth: .infinity, minHeight: 400)
                     }
-                    Spacer()
                 } else {
                     EventsList(events: $events)
                         .environmentObject(viewModel)
                 }
+            }
+            .refreshable {
+                await refreshEvents()
             }
             .navigationTitle("My Events")
             .toolbar {
@@ -123,22 +145,9 @@ struct ContentView: View {
             }
             .sheet(isPresented: $showAddMenu) {
                 AddEventMenuView { newEvent in
-                    Task {
-                        let granted = try await AlarmManager.shared.requestAuthorization()
-                        if granted == .authorized {
-                            print("✅ Alarm permission granted.")
-                            await scheduleAlarm(for: newEvent)
-                        } else {
-                            print("❌ Alarm permission denied.")
-                        }
-                    }
-                    saveEventRDB(newEvent) { result in
-                        if case let .failure(error) = result {
-                            print("❌ Failed to save to Firebase: \(error)")
-                        } else {
-                            print("✅ Event saved to Firebase.")
-                        }
-                    }
+                    // Creating or joining an event does not implicitly enable an alarm.
+                    // The per-event Alarm setting writes the shared Firebase preference.
+                    upsertEvent(newEvent)
                 }
                 .environmentObject(viewModel)
             }
@@ -166,8 +175,11 @@ struct ContentView: View {
 //                profileDoesNotWork = true
 //            }
 
-            // Start streaming events
+            // Keep one live event observer while home is visible; fetch a fresh
+            // snapshot on entry as well in case this screen was suspended.
             startStreaming()
+            Task { await refreshEvents() }
+            AlarmSyncManager.shared.start()
 
             // Observe member settings changes and force refresh
             settingsObserver = NotificationCenter.default.addObserver(
@@ -183,11 +195,22 @@ struct ContentView: View {
             }
             
         }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active {
+                startStreaming()
+                Task { await refreshEvents() }
+                AlarmSyncManager.shared.start()
+            }
+        }
         .onDisappear {
-            // Clean up observers when ContentView disappears
-            Database.database().reference().child("events").removeAllObservers()
+            if let eventsListener {
+                Database.database().reference().child("events")
+                    .removeObserver(withHandle: eventsListener)
+                self.eventsListener = nil
+            }
             if let settingsObserver {
                 NotificationCenter.default.removeObserver(settingsObserver)
+                self.settingsObserver = nil
             }
         }
 //        .sheet(isPresented: $showOnboarding) {

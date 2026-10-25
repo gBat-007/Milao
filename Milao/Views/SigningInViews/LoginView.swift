@@ -14,8 +14,17 @@ struct LoginView: View {
 //        var locationManager = LocationManager()
 //        locationManager.requestAuthorization()
           let ref = Database.database().reference()
-          do {try await ref.child("users").child(viewModel.user!.uid).setValue(Member(from: viewModel.user!).toFirebaseDict())}
-          catch {print(error.localizedDescription)}
+          let member = Member(from: viewModel.user!)
+          do {
+              try await ref.child("users").child(viewModel.user!.uid).updateChildValues([
+                  "id": member.id,
+                  "name": member.name,
+                  "locationPlaceID": member.locationPlaceID,
+                  "profilePhotoURL": member.profilePhotoURL ?? ""
+              ])
+          } catch {
+              print(error.localizedDescription)
+          }
           UserDefaults.standard.set(viewModel.user!.uid, forKey: "userID")
           dismiss()
       }

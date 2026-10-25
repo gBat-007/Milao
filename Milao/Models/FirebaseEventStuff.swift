@@ -1,4 +1,5 @@
 import FirebaseDatabase
+import FirebaseAuth
 import Foundation
 import UIKit
 
@@ -8,7 +9,6 @@ func saveEventRDB(_ event: Event, completion: @escaping (Result<Event, Error>) -
 
     var eventToSave = event
     eventToSave.id = id
-    // Inject placeholders for empty arrays (keep for places/chats only)
     if eventToSave.places.isEmpty {
         eventToSave.places = [
             Place(
@@ -34,21 +34,18 @@ func saveEventRDB(_ event: Event, completion: @escaping (Result<Event, Error>) -
     }
 
     do {
-        // Encode as before to leverage Codable for everything except members
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         let data = try encoder.encode(eventToSave)
-
-        guard var dict = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] else {
-            return completion(.failure(NSError(domain: "EncodingError", code: 0)))
+        guard var dict = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            completion(.failure(NSError(domain: "EncodingError", code: 0)))
+            return
         }
 
-        // Replace members with memberIDs for normalization
         let memberIDs = eventToSave.members.map { $0.id }
         dict["memberIDs"] = memberIDs
         dict.removeValue(forKey: "members")
 
-        // Fix color component types (ensure all components are Doubles)
         func fixColorComponentTypes(in colorDict: inout [String: Any]) {
             for key in ["red", "green", "blue", "alpha"] {
                 if let str = colorDict[key] as? String, let dbl = Double(str) {
@@ -61,151 +58,141 @@ func saveEventRDB(_ event: Event, completion: @escaping (Result<Event, Error>) -
             fixColorComponentTypes(in: &bgColor1)
             dict["bgColor1"] = bgColor1
         }
-
         if var bgColor2 = dict["bgColor2"] as? [String: Any] {
             fixColorComponentTypes(in: &bgColor2)
             dict["bgColor2"] = bgColor2
         }
 
-        // Upload to Firebase
         ref.child("events").child(id).setValue(dict) { error, _ in
-            if let error = error {
+            if let error {
                 completion(.failure(error))
             } else {
                 completion(.success(event))
             }
         }
-        
+
         for memberId in memberIDs {
-            ref.child("users").child(memberId).child("eventIDs").getData { error, snapshot in
+            let eventIDsRef = ref.child("users").child(memberId).child("eventIDs")
+            eventIDsRef.getData { error, snapshot in
                 guard error == nil else { return }
-                
-                var arr = snapshot?.value as? [String] ?? []
-                
-                if !arr.contains(id) {
-                    arr.append(id)
-                    ref.child("users").child(memberId).child("eventIDs").setValue(arr)
+                var ids = snapshot?.value as? [String] ?? []
+                if !ids.contains(id) {
+                    ids.append(id)
+                    eventIDsRef.setValue(ids)
                 }
             }
         }
-        
     } catch {
         completion(.failure(error))
     }
 }
 
-func observeEventsRDB(onChange: @escaping ([Event]) -> Void) {
-    let rootRef = Database.database().reference()
-    let eventsRef = rootRef.child("events")
-    let usersRef = rootRef.child("users")
+private func stringIDs(from value: Any?) -> [String] {
+    if let ids = value as? [String] {
+        return ids
+    }
+    if let ids = value as? [Any] {
+        return ids.compactMap { $0 as? String }
+    }
+    if let members = value as? [String: Any] {
+        // Android currently writes member IDs as a list, while earlier records
+        // may contain a UID-keyed map. Accept both Realtime Database shapes.
+        return members.keys.sorted()
+    }
+    return []
+}
 
-    let userid = UserDefaults.standard.string(forKey: "userID")
-    
-    // Observe all events
-    eventsRef.observe(.value, with: { snapshot in
-        // First, collect raw event dictionaries keyed by eventId
-        var eventDictsByKey: [(key: String, value: [String: Any])] = []
+private func makeEventDecoder() -> JSONDecoder {
+    let decoder = JSONDecoder()
+    decoder.dateDecodingStrategy = .custom { decoder in
+        let container = try decoder.singleValueContainer()
+        if let seconds = try? container.decode(Double.self) {
+            return Date(timeIntervalSince1970: seconds / 1000)
+        }
+        let value = try container.decode(String.self)
+        let fractional = ISO8601DateFormatter()
+        fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = fractional.date(from: value) { return date }
+        let standard = ISO8601DateFormatter()
+        standard.formatOptions = [.withInternetDateTime]
+        if let date = standard.date(from: value) { return date }
+        throw DecodingError.dataCorruptedError(
+            in: container,
+            debugDescription: "Unsupported event date: \(value)"
+        )
+    }
+    return decoder
+}
 
+private func events(from snapshot: DataSnapshot) -> [Event] {
+        // Never block the visible event list on reading the entire users tree.
+        // On Android-created events, event visibility comes from memberIDs, and
+        // user profiles are not required to decode or display the event card.
+        guard let userID = Auth.auth().currentUser?.uid else { return [] }
+
+        var events: [Event] = []
         for child in snapshot.children {
-            guard let snap = child as? DataSnapshot,
-                  let dict = snap.value as? [String: Any] else {
-                continue
+            guard let child = child as? DataSnapshot,
+                  var dict = child.value as? [String: Any] else { continue }
+
+            var memberIDs = stringIDs(from: dict["memberIDs"])
+            if memberIDs.isEmpty {
+                memberIDs = stringIDs(from: dict["members"])
             }
-            eventDictsByKey.append((key: snap.key, value: dict))
+            guard memberIDs.contains(userID) else { continue }
+
+            // Android writes its membership map as compatibility data. Remove it
+            // before Codable sees Event.members, which is an array on iOS.
+            dict.removeValue(forKey: "memberIDs")
+            dict.removeValue(forKey: "members")
+            dict["id"] = child.key
+            dict["chats"] = dict["chats"] ?? []
+            dict["places"] = dict["places"] ?? []
+            dict["emoji"] = dict["emoji"] ?? "🎉"
+            dict["ownerID"] = dict["ownerID"] ?? ""
+
+            do {
+                let data = try JSONSerialization.data(withJSONObject: dict)
+                var event = try makeEventDecoder().decode(Event.self, from: data)
+                event.id = child.key
+                // Keep member counts and identity available in the list immediately.
+                event.members = memberIDs.map {
+                    Member(id: $0, name: "", locationPlaceID: "", eventIDs: [])
+                }
+                event.places.removeAll { $0.id == "placeholder" }
+                events.append(event)
+            } catch {
+                print("❌ Could not decode event \(child.key) from Realtime Database: \(error)")
+            }
         }
 
-        if eventDictsByKey.isEmpty {
-            print("🔄 Events updated: 0 events received from Firebase.")
-            onChange([])
+        events.sort { $0.eventDate > $1.eventDate }
+        return events
+}
+
+@discardableResult
+func observeEventsRDB(onChange: @escaping ([Event]) -> Void) -> DatabaseHandle {
+    let eventsRef = Database.database().reference().child("events")
+    return eventsRef.observe(.value, with: { snapshot in
+        let events = events(from: snapshot)
+        DispatchQueue.main.async {
+            print("🔄 Realtime Database returned \(events.count) events for current user")
+            onChange(events)
+        }
+    }, withCancel: { error in
+        print("❌ Realtime Database event listener failed: \(error.localizedDescription)")
+        DispatchQueue.main.async { onChange([]) }
+    })
+}
+
+func refreshEventsRDB(completion: @escaping ([Event]) -> Void) {
+    Database.database().reference().child("events").getData { error, snapshot in
+        if let error {
+            print("❌ Realtime Database refresh failed: \(error.localizedDescription)")
+            DispatchQueue.main.async { completion([]) }
             return
         }
-
-        // Collect all member IDs across all events
-        var allMemberIDs = Set<String>()
-        for (_, dict) in eventDictsByKey {
-            if let ids = dict["memberIDs"] as? [String] {
-                allMemberIDs.formUnion(ids)
-            }
-        }
-
-        // Fetch users once to hydrate members
-        usersRef.observeSingleEvent(of: .value, with:
-        { (usersSnapshot: DataSnapshot) in
-            var usersLookup: [String: [String: Any]] = [:]
-            if let usersDict = usersSnapshot.value as? [String: Any] {
-                for (uid, value) in usersDict {
-                    if let v = value as? [String: Any] {
-                        usersLookup[uid] = v
-                    }
-                }
-            }
-
-            var events: [Event] = []
-
-            for (eventKey, dict) in eventDictsByKey {
-                do {
-                    // Prepare a mutable dict for decoding Event fields (without members)
-                    var eventDecodingDict = dict
-
-                    // Extract member IDs (preferred normalized path)
-                    let memberIDs: [String]
-                    if let ids = dict["memberIDs"] as? [String] {
-                        memberIDs = ids
-                    } else {
-                        memberIDs = []
-                    }
-
-                    eventDecodingDict.removeValue(forKey: "memberIDs")
-
-                    // Decode other event fields
-                    let data = try JSONSerialization.data(withJSONObject: eventDecodingDict)
-                    let dateFormatter = DateFormatter()
-                    dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssXXX"
-                    let jsonDecoder = JSONDecoder()
-                    jsonDecoder.dateDecodingStrategy = .formatted(dateFormatter)
-                    var event = try jsonDecoder.decode(Event.self, from: data)
-                    event.id = eventKey
-
-                    // Hydrate members from usersLookup via Member.init(dictionary:)
-                    let hydratedMembers: [Member] = memberIDs.compactMap { uid in
-                        guard let uDict = usersLookup[uid] else { return nil }
-                        return Member(dictionary: uDict)
-                    }
-                    
-                    event.members = hydratedMembers
-
-                    // Remove any placeholder entries we still might have for places
-                    event.places.removeAll { $0.id == "placeholder" }
-
-                    // Ownership/membership filter (same as before)
-                    
-//                    let isOwnedByUser = event.ownerID == deviceId
-                    let isUserInMembers = event.members.contains(where: {userid == $0.id })
-
-                    if /*isOwnedByUser ||*/ isUserInMembers {
-                        events.append(event)
-                    }
-
-                } catch let decodingError as DecodingError {
-                    switch decodingError {
-                    case .keyNotFound(let key, let context):
-                        print("❌ Missing key '\(key.stringValue)' – \(context.debugDescription)")
-                    case .typeMismatch(let type, let context):
-                        print("❌ Type mismatch for \(type) – \(context.debugDescription)")
-                    case .valueNotFound(let type, let context):
-                        print("❌ Value not found for \(type) – \(context.debugDescription)")
-                    case .dataCorrupted(let context):
-                        print("❌ Data corrupted – \(context.debugDescription)")
-                    @unknown default:
-                        print("❌ Unknown decoding error: \(decodingError)")
-                    }
-                } catch {
-                    print("❌ General decoding error: \(error.localizedDescription)")
-                }
-            }
-
-            print("🔄 Events updated: \(events.count) events received from Firebase (hydrated).")
-            onChange(events)
-        })
-    })
+        let events = snapshot.map(events(from:)) ?? []
+        DispatchQueue.main.async { completion(events) }
+    }
 }
