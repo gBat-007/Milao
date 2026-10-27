@@ -64,6 +64,8 @@ struct CreateEventView: View {
     @State private var inviteCode = Event.generateInviteCode()
     @State private var isSaving = false
     @State private var errorMessage: String?
+    @State private var calendarAlertMessage: String?
+    @State private var pendingCreatedEvent: Event?
     @EnvironmentObject var viewModel: AuthenticationViewModel
     
     private var dateRange: ClosedRange<Date> {
@@ -105,6 +107,18 @@ struct CreateEventView: View {
                 }
             }
             .navigationTitle("Create Event")
+            .alert("Event Saved", isPresented: Binding(
+                get: { calendarAlertMessage != nil },
+                set: { if !$0 { calendarAlertMessage = nil } }
+            )) {
+                Button("OK") {
+                    if let event = pendingCreatedEvent {
+                        onSuccess(event)
+                    }
+                }
+            } message: {
+                Text(calendarAlertMessage ?? "")
+            }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button(isSaving ? "Saving…" : "Save") {
@@ -136,10 +150,17 @@ struct CreateEventView: View {
                 isSaving = false
                 switch result {
                 case .success:
-                    onSuccess(event) // <- this ensures the event shows up in the list
+                    PersonalCalendarWriter().add(event) { calendarResult in
+                        switch calendarResult {
+                        case .success:
+                            onSuccess(event)
+                        case .failure(let error):
+                            pendingCreatedEvent = event
+                            calendarAlertMessage = "The event was created in Milao, but couldn't be added to your default calendar. \(error.localizedDescription)"
+                        }
+                    }
                 case .failure(let error):
-                    print("Save failed: \(error)")
-                    // show error toast
+                    errorMessage = "Couldn't create event: \(error.localizedDescription)"
                 }
             }
         }
